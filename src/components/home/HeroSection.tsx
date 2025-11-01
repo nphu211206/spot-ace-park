@@ -1,8 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MapPin, Clock, DollarSign, Star } from "lucide-react";
 import heroImage from "@/assets/parking-hero.jpg";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -30,12 +33,12 @@ const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button variant="hero" size="xl" className="group">
+            <Button variant="hero" size="xl" className="group" onClick={() => navigate("/parking")}>
               <MapPin className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
               Tìm bãi đỗ xe
             </Button>
-            <Button variant="outline" size="xl" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary">
-              Xem demo
+            <Button variant="outline" size="xl" className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-primary" onClick={() => navigate("/auth")}>
+              Đăng ký ngay
             </Button>
           </div>
 
