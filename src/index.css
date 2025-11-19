@@ -187,6 +187,7 @@ All colors MUST be HSL.
 .auth-login-box {
   position: absolute;
   width: 400px;
+  z-index: 10;
 }
 
 .auth-login-box h1 {
@@ -194,7 +195,8 @@ All colors MUST be HSL.
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px hsl(217 91% 60% / 0.3);
+  filter: drop-shadow(0 0 8px hsl(217 91% 60% / 0.5));
+  margin-bottom: 2rem;
 }
 
 .auth-input-box {
