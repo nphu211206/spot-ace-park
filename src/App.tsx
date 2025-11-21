@@ -10,6 +10,8 @@ import Parking from "./pages/Parking";
 import Bookings from "./pages/Bookings";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import Scanner from "./pages/Scanner";
+import BookingPage from "./pages/BookingPage"; // <--- IMPORT MỚI
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,14 @@ const App = () => (
               <Parking />
             </ProtectedRoute>
           } />
+          
+          {/* ROUTE MỚI: TRANG THANH TOÁN CHI TIẾT */}
+          <Route path="/parking/:id" element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          } />
+
           <Route path="/bookings" element={
             <ProtectedRoute>
               <Bookings />
@@ -43,7 +53,11 @@ const App = () => (
               <Admin />
             </ProtectedRoute>
           } />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/scanner" element={
+            <ProtectedRoute>
+              <Scanner />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
