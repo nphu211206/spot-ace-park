@@ -1,35 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, DollarSign, Star, ArrowRight, Car } from "lucide-react";
+import { MapPin, Clock, DollarSign, Star, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/parking-hero.jpg";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Kiểm tra đăng nhập nhanh từ LocalStorage để đổi nút
     const user = localStorage.getItem('spot_user');
     setIsLoggedIn(!!user);
   }, []);
 
-  const handleFindParking = () => {
-    navigate("/parking");
-  };
-
-  const handleAuthAction = () => {
-    if (isLoggedIn) {
-      navigate("/bookings");
-    } else {
-      navigate("/auth");
-    }
-  };
-
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-slate-900">
-      {/* Background Image with Overlay */}
+      {/* Background */}
       <div className="absolute inset-0 z-0">
         <img 
           src={heroImage} 
@@ -37,7 +23,6 @@ const HeroSection = () => {
           className="w-full h-full object-cover opacity-40 scale-105 animate-in fade-in zoom-in duration-1000"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
       </div>
 
       {/* Content */}
@@ -58,15 +43,11 @@ const HeroSection = () => {
             </span>
           </h1>
           
-          <p className="text-lg md:text-2xl mb-10 text-slate-300 max-w-2xl mx-auto leading-relaxed font-light">
-            Không còn nỗi lo tìm chỗ đỗ. Hệ thống Vision AI tự động nhận diện, 
-            đặt chỗ trước và thanh toán một chạm.
-          </p>
-
           <div className="flex flex-col sm:flex-row gap-5 justify-center items-center mb-16">
             <Button 
               size="xl" 
-              onClick={handleFindParking}
+              onClick={() => navigate("/parking")} // Dùng navigate trực tiếp
+              type="button" // Bắt buộc để không bị form submit
               className="h-16 px-8 text-lg font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.7)] transition-all scale-100 hover:scale-105 border-0"
             >
               <MapPin className="mr-2 h-6 w-6" />
@@ -76,7 +57,8 @@ const HeroSection = () => {
             <Button 
               variant="outline" 
               size="xl" 
-              onClick={handleAuthAction}
+              onClick={() => navigate(isLoggedIn ? "/bookings" : "/auth")}
+              type="button"
               className="h-16 px-8 text-lg font-medium text-white border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-sm hover:border-white/40 transition-all"
             >
               {isLoggedIn ? (
@@ -87,15 +69,15 @@ const HeroSection = () => {
             </Button>
           </div>
 
-          {/* Features Grid */}
+          {/* Features */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
             {[
-              { icon: MapPin, title: "Bản đồ 3D", desc: "Trực quan hóa vị trí", color: "text-blue-400" },
-              { icon: Clock, title: "Thời gian thực", desc: "Cập nhật từng giây", color: "text-cyan-400" },
+              { icon: MapPin, title: "Bản đồ 3D", desc: "Trực quan hóa", color: "text-blue-400" },
+              { icon: Clock, title: "Thời gian thực", desc: "Cập nhật tức thì", color: "text-cyan-400" },
               { icon: DollarSign, title: "Giá thông minh", desc: "Tối ưu chi phí", color: "text-green-400" },
               { icon: Star, title: "Đẳng cấp VIP", desc: "Trải nghiệm 5 sao", color: "text-yellow-400" }
             ].map((feature, index) => (
-              <div key={index} className="group p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-white/10 hover:bg-slate-800/80 transition-all backdrop-blur-sm hover:-translate-y-1 cursor-default">
+              <div key={index} className="group p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-white/10 hover:bg-slate-800/80 transition-all backdrop-blur-sm cursor-default">
                 <feature.icon className={`h-8 w-8 ${feature.color} mb-3 mx-auto group-hover:scale-110 transition-transform`} />
                 <h3 className="font-bold text-white mb-1">{feature.title}</h3>
                 <p className="text-xs text-slate-400">{feature.desc}</p>

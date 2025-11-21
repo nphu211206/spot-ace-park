@@ -18,38 +18,36 @@ const Header = () => {
   const [user, setUser] = useState<any>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Kiểm tra đăng nhập từ LocalStorage (Cơ chế mới)
   const checkLoginState = () => {
-    const userStr = localStorage.getItem('spot_user');
-    if (userStr) {
-      try {
+    try {
+      const userStr = localStorage.getItem('spot_user');
+      if (userStr) {
         setUser(JSON.parse(userStr));
-      } catch (e) {
+      } else {
         setUser(null);
       }
-    } else {
+    } catch (e) {
       setUser(null);
     }
   };
 
   useEffect(() => {
     checkLoginState();
+    // Lắng nghe sự kiện đăng nhập/đăng xuất để cập nhật Header ngay lập tức
     window.addEventListener('auth-change', checkLoginState);
-    window.addEventListener('storage', checkLoginState);
-    return () => {
-      window.removeEventListener('auth-change', checkLoginState);
-      window.removeEventListener('storage', checkLoginState);
-    };
+    return () => window.removeEventListener('auth-change', checkLoginState);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('spot_user');
-    window.dispatchEvent(new Event('auth-change'));
+    window.dispatchEvent(new Event('auth-change')); // Báo cho toàn app biết
     toast.info("Đã đăng xuất");
     navigate("/auth");
     setIsMenuOpen(false);
   };
 
-  // Helper để chuyển trang an toàn
+  // Hàm điều hướng chuẩn SPA (Không reload)
   const goTo = (path: string) => {
     navigate(path);
     setIsMenuOpen(false);
@@ -60,8 +58,11 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/80 backdrop-blur-xl shadow-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* LOGO - Bấm là về Home */}
-        <div className="flex items-center cursor-pointer group" onClick={() => goTo('/')}>
+        {/* LOGO */}
+        <div 
+          className="flex items-center cursor-pointer group select-none" 
+          onClick={() => goTo('/')}
+        >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg group-hover:scale-105 transition-transform duration-300">
             <Car className="h-6 w-6 text-white" />
           </div>
@@ -70,12 +71,13 @@ const Header = () => {
           </span>
         </div>
 
-        {/* DESKTOP NAVIGATION - Dùng onClick thay vì Link */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* DESKTOP NAVIGATION */}
+        <nav className="hidden md:flex items-center gap-2">
           <Button 
             variant={isActive('/parking') ? "secondary" : "ghost"} 
             className="text-sm font-medium"
             onClick={() => goTo('/parking')}
+            type="button"
           >
             <MapPin className="w-4 h-4 mr-2" />
             Tìm bãi xe
@@ -86,17 +88,20 @@ const Header = () => {
               variant={isActive('/bookings') ? "secondary" : "ghost"} 
               className="text-sm font-medium"
               onClick={() => goTo('/bookings')}
+              type="button"
             >
               <History className="w-4 h-4 mr-2" />
               Lịch sử đặt
             </Button>
           )}
 
+          {/* Nút Scanner nổi bật */}
           {user && (
             <Button 
               variant="outline" 
               className="ml-2 border-purple-500/30 text-purple-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-500 group relative overflow-hidden"
               onClick={() => goTo('/scanner')}
+              type="button"
             >
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-500/10 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
               <ScanLine className="w-4 h-4 mr-2" />
@@ -109,6 +114,7 @@ const Header = () => {
               variant="default" 
               className="ml-2 bg-slate-900 hover:bg-slate-800 text-white shadow-md"
               onClick={() => goTo('/admin')}
+              type="button"
             >
               <Settings className="w-4 h-4 mr-2" /> Quản trị
             </Button>
@@ -124,14 +130,14 @@ const Header = () => {
                   <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold shadow-sm">
                     {user.name?.charAt(0).toUpperCase() || "U"}
                   </div>
-                  <div className="flex flex-col items-start text-xs">
-                    <span className="font-bold text-slate-700 max-w-[100px] truncate">{user.name}</span>
-                    <span className="text-slate-500 capitalize">{user.role}</span>
+                  <div className="flex flex-col items-start text-xs text-left">
+                    <span className="font-bold text-slate-700 max-w-[80px] truncate">{user.name}</span>
+                    <span className="text-slate-500 capitalize text-[10px]">{user.role}</span>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
+                <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => goTo('/profile')}>
                   <User className="w-4 h-4 mr-2" /> Hồ sơ cá nhân
@@ -163,7 +169,7 @@ const Header = () => {
         </Button>
       </div>
 
-      {/* MOBILE MENU CONTENT */}
+      {/* MOBILE MENU */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 w-full bg-white border-t border-slate-200 shadow-xl animate-in slide-in-from-top-5 z-50">
           <div className="p-4 space-y-3">
@@ -185,10 +191,6 @@ const Header = () => {
                   </Button>
                 )}
                 <div className="border-t pt-3 mt-3">
-                  <div className="flex items-center gap-3 mb-3 px-2">
-                     <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">{user.name?.charAt(0)}</div>
-                     <div><p className="font-bold text-sm">{user.name}</p><p className="text-xs text-gray-500">{user.phone}</p></div>
-                  </div>
                   <Button variant="destructive" className="w-full" onClick={handleLogout}>Đăng xuất</Button>
                 </div>
               </>
@@ -202,9 +204,7 @@ const Header = () => {
         </div>
       )}
       <style>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
         .animate-shimmer { animation: shimmer 1.5s infinite; }
       `}</style>
     </header>

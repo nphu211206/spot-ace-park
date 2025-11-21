@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
+import { Navigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,64 +8,54 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      
-      if (session && requireAdmin) {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
+    const checkAuth = () => {
+      try {
+        // 1. Lấy thông tin user từ bộ nhớ trình duyệt (Local Storage)
+        const userStr = localStorage.getItem('spot_user');
         
-        setIsAdmin(data?.role === 'admin');
+        if (!userStr) {
+          // Chưa đăng nhập
+          setIsAuthorized(false);
+          return;
+        }
+
+        const user = JSON.parse(userStr);
+
+        // 2. Nếu yêu cầu quyền Admin, kiểm tra role
+        if (requireAdmin && user.role !== 'admin') {
+          toast.error("Bạn không có quyền truy cập trang này!");
+          setIsAuthorized(false);
+          return;
+        }
+
+        // 3. Hợp lệ
+        setIsAuthorized(true);
+      } catch (error) {
+        console.error("Auth Error:", error);
+        setIsAuthorized(false);
       }
-      
-      setLoading(false);
-    });
+    };
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      
-      if (session && requireAdmin) {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        setIsAdmin(data?.role === 'admin');
-      }
-      
-      setLoading(false);
-    });
+    checkAuth();
+  }, [requireAdmin, location.pathname]);
 
-    return () => subscription.unsubscribe();
-  }, [requireAdmin]);
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>;
+  // Đang kiểm tra... (Tránh nháy màn hình)
+  if (isAuthorized === null) {
+    return null; 
   }
 
-  if (!session) {
-    return <Navigate to="/auth" replace />;
+  // Nếu không hợp lệ, đá về trang đăng nhập
+  if (!isAuthorized) {
+    // Nếu đang ở trang chủ mà bị đá thì không cần redirect loop
+    if (location.pathname === '/') return null;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
+  // Nếu hợp lệ, cho phép truy cập
   return <>{children}</>;
 };
 
