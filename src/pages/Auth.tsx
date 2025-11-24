@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ShieldCheck, LogIn, UserPlus, User, Lock, Phone } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { ShieldCheck, User, Lock, Phone, KeyRound, ArrowRight, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React from "react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
   
@@ -20,47 +22,46 @@ const Auth = () => {
     adminCode: "",
   });
 
-  // Redirect nếu đã đăng nhập
   useEffect(() => {
     const user = localStorage.getItem('spot_user');
     if (user) navigate('/');
   }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Chặn reload trang
+  const handleAuth = async (type: 'login' | 'signup') => {
     setLoading(true);
-
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
+      const endpoint = type === 'login' ? '/api/auth/login' : '/api/auth/signup';
       
-      // Kết nối tới Server Node.js Local
+      const payload = {
+        ...formData,
+        adminCode: type === 'signup' ? formData.adminCode : undefined 
+      };
+
       const response = await fetch(`http://localhost:3000${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          isAdmin: isAdminMode
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
 
-      if (!data.success) {
-        throw new Error(data.message);
-      }
+      if (!data.success) throw new Error(data.message);
 
-      if (isLogin) {
+      if (type === 'login') {
         localStorage.setItem('spot_user', JSON.stringify(data.user));
         window.dispatchEvent(new Event('auth-change'));
-        toast.success(isAdminMode ? `Chào sếp ${data.user.name}!` : "Đăng nhập thành công!");
-        setTimeout(() => {
-           navigate(isAdminMode ? "/admin" : "/");
-        }, 500);
+        
+        if(data.user.role === 'admin') {
+            toast.success(`Đã kích hoạt Giao thức Quản trị. Chào sếp ${data.user.name}!`);
+            // Force redirect to Admin immediately
+            setTimeout(() => navigate("/admin"), 500);
+        } else {
+            toast.success("Đăng nhập thành công!");
+            navigate("/");
+        }
       } else {
-        toast.success("Đăng ký thành công! Mời đăng nhập.");
-        setIsLogin(true);
+        toast.success("Khởi tạo định danh thành công. Mời đăng nhập.");
       }
-
     } catch (error: any) {
       toast.error(error.message || "Lỗi kết nối Server");
     } finally {
@@ -68,237 +69,140 @@ const Auth = () => {
     }
   };
 
-  // --- CSS STYLES (Typed correctly to fix red errors) ---
-  const styles: { [key: string]: React.CSSProperties } = {
-    container: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: '#1f293a',
-      fontFamily: "'Poppins', sans-serif",
-      overflow: 'hidden',
-      position: 'relative',
-    },
-    box: {
-      position: 'relative',
-      width: '380px',
-      height: '520px', 
-      background: '#1c1c1c',
-      borderRadius: '8px',
-      overflow: 'hidden',
-      zIndex: 10,
-    },
-    form: {
-      position: 'absolute',
-      inset: '4px',
-      background: '#222',
-      padding: '40px 30px',
-      borderRadius: '8px',
-      zIndex: 2,
-      display: 'flex',
-      flexDirection: 'column',
-    },
-    inputBox: {
-      position: 'relative',
-      width: '100%',
-      marginTop: '25px',
-    },
-    // Fix lỗi đỏ ở đây bằng cách chuẩn hóa object style
-    input: {
-      width: '100%',
-      padding: '20px 10px 10px',
-      background: 'transparent',
-      border: 'none',
-      outline: 'none',
-      color: '#ffffff', // Đã sửa lỗi cú pháp màu
-      fontSize: '1em',
-      letterSpacing: '0.05em',
-      transition: '0.5s',
-      zIndex: 10,
-      borderBottom: `1px solid ${isAdminMode ? '#ef4444' : '#0ef'}`,
-    },
-    label: {
-      position: 'absolute',
-      left: 0,
-      padding: '20px 10px 10px',
-      pointerEvents: 'none',
-      color: '#8f8f8f',
-      fontSize: '1em',
-      letterSpacing: '0.05em',
-      transition: '0.5s',
-      top: 0,
-    },
-    submitBtn: {
-      border: 'none',
-      outline: 'none',
-      padding: '12px 25px',
-      background: isAdminMode ? '#ef4444' : '#0ef',
-      cursor: 'pointer',
-      fontSize: '0.9em',
-      borderRadius: '4px',
-      fontWeight: 600,
-      width: '100%',
-      marginTop: '30px',
-      color: isAdminMode ? '#fff' : '#1f293a',
-      boxShadow: isAdminMode ? '0 0 10px #ef4444' : '0 0 10px #0ef',
-      transition: 'all 0.3s',
-    },
-    switchBtn: {
-       cursor: 'pointer',
-       color: isAdminMode ? '#ef4444' : '#8f8f8f',
-       fontSize: '0.8em',
-       marginBottom: '10px',
-       display: 'flex',
-       alignItems: 'center',
-       justifyContent: 'flex-end',
-       gap: '8px'
-    },
-    toggleText: {
-        marginTop: '20px',
-        textAlign: 'center',
-        fontSize: '0.8em',
-        color: '#8f8f8f'
-    },
-    link: {
-        color: isAdminMode ? '#ef4444' : '#0ef',
-        cursor: 'pointer',
-        fontWeight: 'bold',
-        textDecoration: 'none',
-        marginLeft: '5px'
-    }
-  };
-
   return (
-    <div style={styles.container}>
-      {/* Rotating Border Effect */}
-      <div className="border-animate" style={{
-         position: 'absolute',
-         width: '390px',
-         height: '530px',
-         background: isAdminMode ? 'linear-gradient(180deg, #ef4444, transparent, #ef4444)' : 'linear-gradient(180deg, #0ef, transparent, #0ef)',
-         animation: 'animate 6s linear infinite',
-         zIndex: 1
-      }}></div>
+    <div className="min-h-screen flex items-center justify-center bg-[#09090b] relative overflow-hidden font-sans">
+      {/* --- ANIMATED BACKGROUND (Cyberpunk Grid) --- */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+      
+      {/* --- GLOW EFFECTS --- */}
+      <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] ${isAdminMode ? 'bg-red-500/20' : 'bg-blue-500/20'} blur-[120px] rounded-full transition-colors duration-700`}></div>
 
-      <div style={styles.box}>
-        <form style={styles.form} onSubmit={handleSubmit}>
-          <h2 style={{ 
-              color: isAdminMode ? '#ef4444' : '#0ef', 
-              fontWeight: 500, 
-              textAlign: 'center', 
-              letterSpacing: '0.1em',
-              fontSize: '24px',
-              marginBottom: '10px'
-          }}>
-            {isLogin ? (isAdminMode ? "QUẢN TRỊ VIÊN" : "ĐĂNG NHẬP") : "ĐĂNG KÝ"}
-          </h2>
+      <Card className="w-full max-w-md border-slate-800 bg-slate-950/80 backdrop-blur-xl shadow-2xl relative z-10">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 border border-slate-800">
+            {isAdminMode ? <ShieldCheck className="h-6 w-6 text-red-500" /> : <User className="h-6 w-6 text-blue-500" />}
+          </div>
+          <CardTitle className={`text-2xl font-black tracking-tight ${isAdminMode ? 'text-red-500' : 'text-white'}`}>
+            {isAdminMode ? 'HỆ THỐNG QUẢN TRỊ' : 'SPOT ACE PARK'}
+          </CardTitle>
+          <CardDescription>
+            Nhập thông tin định danh để truy cập hệ thống
+          </CardDescription>
+        </CardHeader>
 
-          {/* Nút chuyển chế độ Admin */}
-          {isLogin && (
-              <div style={styles.switchBtn}>
-                 <span onClick={() => setIsAdminMode(!isAdminMode)} style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
-                    {isAdminMode ? <ShieldCheck size={16}/> : <UserPlus size={16}/>}
-                    {isAdminMode ? "Chế độ Admin" : "Chế độ Khách"}
-                 </span>
-                 <Switch 
-                    checked={isAdminMode} 
-                    onCheckedChange={setIsAdminMode} 
-                    className={isAdminMode ? "bg-red-600" : ""}
-                 />
+        <CardContent>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-900">
+              <TabsTrigger value="login">Đăng Nhập</TabsTrigger>
+              <TabsTrigger value="signup">Đăng Ký</TabsTrigger>
+            </TabsList>
+
+            {/* --- LOGIN FORM --- */}
+            <TabsContent value="login">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Số điện thoại</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <Input 
+                      className="pl-9 bg-slate-900/50 border-slate-800 focus-visible:ring-offset-0 focus-visible:ring-blue-500" 
+                      placeholder="0912..." 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Mật khẩu</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <Input 
+                      type="password" 
+                      className="pl-9 bg-slate-900/50 border-slate-800 focus-visible:ring-offset-0 focus-visible:ring-blue-500" 
+                      placeholder="••••••" 
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border border-slate-800 rounded-lg bg-slate-900/30">
+                    <div className="flex items-center space-x-2">
+                        <Switch id="admin-mode" checked={isAdminMode} onCheckedChange={setIsAdminMode} className="data-[state=checked]:bg-red-600"/>
+                        <Label htmlFor="admin-mode" className={`cursor-pointer ${isAdminMode ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
+                            {isAdminMode ? 'Chế độ Admin' : 'Chế độ Khách'}
+                        </Label>
+                    </div>
+                </div>
+
+                <Button 
+                    className={`w-full font-bold h-11 ${isAdminMode ? 'bg-red-600 hover:bg-red-700 shadow-[0_0_20px_rgba(220,38,38,0.3)]' : 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_20px_rgba(37,99,235,0.3)]'}`} 
+                    onClick={() => handleAuth('login')}
+                    disabled={loading}
+                >
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'TRUY CẬP HỆ THỐNG'}
+                </Button>
               </div>
-          )}
+            </TabsContent>
 
-          {!isLogin && (
-            <div style={styles.inputBox}>
-              <input 
-                type="text" 
-                required 
-                style={styles.input} 
-                value={formData.fullName}
-                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-              />
-              <span style={{
-                  ...styles.label,
-                  transform: formData.fullName ? 'translateY(-20px)' : 'none',
-                  fontSize: formData.fullName ? '0.65em' : '1em',
-                  color: isAdminMode ? '#ef4444' : '#0ef'
-              }}>Họ và tên</span>
-              <User size={18} style={{position: 'absolute', right: 0, top: '15px', color: isAdminMode ? '#ef4444' : '#0ef'}}/>
-            </div>
-          )}
+            {/* --- SIGNUP FORM --- */}
+            <TabsContent value="signup">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Họ và tên</Label>
+                  <Input 
+                    className="bg-slate-900/50 border-slate-800" 
+                    placeholder="Nguyễn Văn A" 
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Số điện thoại</Label>
+                  <Input 
+                    className="bg-slate-900/50 border-slate-800" 
+                    placeholder="0912..." 
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mật khẩu</Label>
+                  <Input 
+                    type="password" 
+                    className="bg-slate-900/50 border-slate-800" 
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+                
+                {/* MASTER KEY SECTION */}
+                <div className="space-y-2 pt-2 border-t border-slate-800">
+                  <Label className="text-yellow-500 flex items-center gap-2">
+                    <KeyRound className="w-4 h-4"/> Mã Kích Hoạt (Tùy chọn)
+                  </Label>
+                  <Input 
+                    type="password" 
+                    className="bg-slate-900/50 border-yellow-500/30 text-yellow-500 placeholder:text-yellow-500/20 focus-visible:ring-yellow-500" 
+                    placeholder="Nhập Master Key để tạo Admin..." 
+                    value={formData.adminCode}
+                    onChange={(e) => setFormData({...formData, adminCode: e.target.value})}
+                  />
+                </div>
 
-          <div style={styles.inputBox}>
-            <input 
-              type="text" 
-              required 
-              style={styles.input}
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-            />
-            <span style={{
-                  ...styles.label,
-                  transform: formData.phone ? 'translateY(-20px)' : 'none',
-                  fontSize: formData.phone ? '0.65em' : '1em',
-                  color: isAdminMode ? '#ef4444' : '#0ef'
-              }}>Số điện thoại</span>
-             <Phone size={18} style={{position: 'absolute', right: 0, top: '15px', color: isAdminMode ? '#ef4444' : '#0ef'}}/>
-          </div>
-
-          <div style={styles.inputBox}>
-            <input 
-              type="password" 
-              required 
-              style={styles.input}
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-             <span style={{
-                  ...styles.label,
-                  transform: formData.password ? 'translateY(-20px)' : 'none',
-                  fontSize: formData.password ? '0.65em' : '1em',
-                  color: isAdminMode ? '#ef4444' : '#0ef'
-              }}>Mật khẩu</span>
-             <Lock size={18} style={{position: 'absolute', right: 0, top: '15px', color: isAdminMode ? '#ef4444' : '#0ef'}}/>
-          </div>
-
-          {isAdminMode && isLogin && (
-              <div style={styles.inputBox}>
-              <input 
-                type="password" 
-                required
-                style={{...styles.input, color: '#ef4444', borderBottom: '1px solid #ef4444'}}
-                value={formData.adminCode}
-                onChange={(e) => setFormData({...formData, adminCode: e.target.value})}
-              />
-               <span style={{
-                  ...styles.label,
-                  transform: formData.adminCode ? 'translateY(-20px)' : 'none',
-                  fontSize: formData.adminCode ? '0.65em' : '1em',
-                  color: '#ef4444'
-              }}>Mã bí mật (123456)</span>
-            </div>
-          )}
-
-          <button type="submit" style={styles.submitBtn} disabled={loading}>
-            {loading ? "ĐANG XỬ LÝ..." : (isLogin ? (isAdminMode ? "VÀO HỆ THỐNG" : "ĐĂNG NHẬP") : "TẠO TÀI KHOẢN")}
-          </button>
-
-          <p style={styles.toggleText}>
-            {isLogin ? "Chưa có tài khoản? " : "Đã có tài khoản? "}
-            <span style={styles.link} onClick={() => { setIsLogin(!isLogin); setIsAdminMode(false); }}>
-                {isLogin ? "Đăng ký ngay" : "Đăng nhập ngay"}
-            </span>
+                <Button className="w-full bg-slate-100 text-slate-900 hover:bg-slate-200 font-bold" onClick={() => handleAuth('signup')} disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'TẠO TÀI KHOẢN'}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+        <CardFooter className="justify-center border-t border-slate-800 pt-4">
+          <p className="text-xs text-slate-500 text-center">
+            Hệ thống bảo mật Spot Ace Park v2.0 <br/> Powered by Infinity Core
           </p>
-        </form>
-      </div>
-
-      <style>{`
-        @keyframes animate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-      `}</style>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

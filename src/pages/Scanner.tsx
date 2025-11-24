@@ -1,42 +1,44 @@
 import { useEffect, useState, useRef } from "react";
-import { useCamera } from "@/hooks/use-camera";
-import { scanLicensePlate } from "@/lib/vision-engine";
-import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Scan, Camera, RefreshCw, CheckCircle2, XCircle, Zap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Scan, RefreshCw, CheckCircle2, XCircle, Zap, ShieldAlert, Lock } from "lucide-react";
+import { useCamera } from "@/hooks/use-camera";
+import { scanLicensePlate } from "@/lib/vision-engine";
 
-// --- INTERFACES ---
-interface BookingData {
-  id: string;
-  status: string;
-  total_cost: number;
-  start_time: string;
-  end_time: string;
-  vehicle_number: string | null;
-  profiles: {
-    full_name: string | null;
-    phone: string | null;
-  } | null;
-  parking_lots: {
-    name: string;
-  } | null;
-}
+// --- HUD COMPONENT (Giao diện Iron Man) ---
+const ScannerHUD = ({ scanning }: { scanning: boolean }) => (
+  <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+    {/* Corner Brackets */}
+    <div className="absolute top-4 left-4 w-16 h-16 border-l-4 border-t-4 border-cyan-500 rounded-tl-xl"></div>
+    <div className="absolute top-4 right-4 w-16 h-16 border-r-4 border-t-4 border-cyan-500 rounded-tr-xl"></div>
+    <div className="absolute bottom-4 left-4 w-16 h-16 border-l-4 border-b-4 border-cyan-500 rounded-bl-xl"></div>
+    <div className="absolute bottom-4 right-4 w-16 h-16 border-r-4 border-b-4 border-cyan-500 rounded-br-xl"></div>
+    
+    {/* Center Crosshair */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-40 border border-cyan-500/30 rounded-lg bg-cyan-500/5 backdrop-blur-[1px]">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-cyan-500/20"></div>
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full h-[1px] bg-cyan-500/20"></div>
+    </div>
 
-type ScanResult = {
-  status: 'success' | 'error' | 'not_found' | 'scanning';
-  message: string;
-  bookingData?: BookingData;
-};
+    {/* Scanning Line Animation */}
+    {scanning && (
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent animate-scan"></div>
+    )}
+
+    {/* Status Text */}
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/70 text-cyan-400 px-4 py-1 rounded font-mono text-xs tracking-[0.2em] border border-cyan-900">
+        {scanning ? "SYSTEM SCANNING..." : "STANDBY MODE"}
+    </div>
+  </div>
+);
 
 const Scanner = () => {
-  const { videoRef, startCamera, stopCamera, captureImage, isStreaming } = useCamera();
+  const { videoRef, startCamera, captureImage } = useCamera();
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [scannedText, setScannedText] = useState<string>("");
+  const [scanResult, setScanResult] = useState<any>(null);
+  const [manualMode, setManualMode] = useState(false);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -57,15 +59,12 @@ const Scanner = () => {
     if (!canvas) return;
 
     try {
+      // 1. OCR Xử lý ảnh (Local)
       const plateNumber = await scanLicensePlate(canvas);
       
       if (plateNumber) {
-        // Hiệu ứng rung máy khi quét được (nếu hỗ trợ)
-        if (navigator.vibrate) navigator.vibrate(200);
-        
-        console.log("Phát hiện:", plateNumber);
-        setScannedText(plateNumber);
-        stopScanning(); 
+        stopScanning();
+        // 2. Gọi API kiểm tra
         await checkBooking(plateNumber);
       }
     } catch (error) {
@@ -74,7 +73,7 @@ const Scanner = () => {
   };
 
   const checkBooking = async (plateNumber: string) => {
-    setScanResult({ status: 'scanning', message: 'Đang truy vấn SQL Server...' });
+    toast.loading(`Đang phân tích biển số: ${plateNumber}...`);
     
     try {
       const response = await fetch('http://localhost:3000/api/scan', {
@@ -84,127 +83,115 @@ const Scanner = () => {
       });
 
       const result = await response.json();
+      toast.dismiss();
 
       if (result.success) {
-        setScanResult({
-          status: 'success',
-          message: 'Check-in Thành Công! ✅',
-          bookingData: {
-             // Map dữ liệu từ SQL Server về format cũ để không phải sửa UI
-             id: result.data.id,
-             status: result.data.status,
-             total_cost: result.data.total_cost,
-             vehicle_number: result.data.vehicle_number,
-             profiles: { full_name: result.data.user_name }, // SQL lưu thẳng tên
-             parking_lots: { name: result.data.lot_name }
-          } as any
-        });
-        toast.success(`Mời vào: ${result.data.user_name}`);
-        // (Optional) Phát âm thanh Ding!
+        setScanResult({ status: 'success', data: result.data, plate: plateNumber });
+        // Phát âm thanh (Giả lập)
+        const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/scifi_laser_1.ogg');
+        audio.play().catch(() => {});
+        toast.success(`XÁC THỰC THÀNH CÔNG: ${plateNumber}`);
       } else {
-        setScanResult({
-          status: 'not_found',
-          message: `Không tìm thấy vé: ${plateNumber}`,
-        });
-        toast.error("Biển số không tồn tại trong SQL Server.");
+        setScanResult({ status: 'not_found', plate: plateNumber });
+        toast.error("KHÔNG TÌM THẤY DỮ LIỆU VÉ XE!");
       }
     } catch (err) {
-      setScanResult({ status: 'error', message: 'Lỗi kết nối Server' });
+      toast.error("Lỗi kết nối Server");
     }
   };
 
   const toggleAutoScan = () => {
     if (isScanning) {
       stopScanning();
-      toast.info("Đã dừng quét.");
     } else {
       setIsScanning(true);
       setScanResult(null);
-      setScannedText("");
-      toast.success("Bắt đầu quét tự động...");
-      scanIntervalRef.current = setInterval(handleScan, 500);
+      scanIntervalRef.current = setInterval(handleScan, 800); // Scan mỗi 0.8s
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans overflow-hidden">
       <Header />
       
-      <main className="flex-1 relative flex flex-col overflow-hidden">
-        <div className="relative flex-1 bg-gray-900 flex items-center justify-center">
+      <main className="flex-1 relative flex flex-col">
+        {/* VIDEO FEED AREA */}
+        <div className="flex-1 relative bg-slate-900 flex items-center justify-center overflow-hidden">
           <video 
             ref={videoRef} 
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover opacity-80"
             playsInline 
             muted 
             autoPlay
           />
+          
+          {/* Noise Texture Overlay */}
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+          
+          {/* THE HUD LAYER */}
+          <ScannerHUD scanning={isScanning} />
 
-          {/* --- HUD SÁNG HƠN --- */}
-          <div className="absolute inset-0 pointer-events-none z-10">
-            {/* Mask làm tối xung quanh, sáng ở giữa */}
-            <div className="absolute inset-0 bg-black/30 mask-scan-bright"></div>
-            
-            {/* Khung quét */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[85%] h-[35%] border-2 border-green-400 rounded-lg shadow-[0_0_50px_rgba(74,222,128,0.5)]">
-               {isScanning && <div className="absolute w-full h-1 bg-green-400/80 top-0 animate-scan-laser shadow-[0_0_15px_rgba(74,222,128,1)]"></div>}
-               <div className="absolute -bottom-8 left-0 right-0 text-center">
-                 <span className="text-xs font-bold text-black bg-green-400 px-3 py-1 rounded">ĐƯA BIỂN SỐ VÀO KHUNG</span>
-               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-black/80 backdrop-blur-lg border-t border-white/10 p-6 pb-10 rounded-t-3xl -mt-6 relative z-20">
-          <div className="w-12 h-1 bg-gray-700 rounded-full mx-auto mb-6"></div>
-
-          {scanResult ? (
-            <Card className={`p-4 border-l-4 ${
-              scanResult.status === 'success' ? 'border-l-green-500 bg-green-950/50' : 
-              scanResult.status === 'not_found' ? 'border-l-red-500 bg-red-950/50' : 'bg-slate-900'
-            }`}>
-              <div className="flex gap-4">
-                <div className="mt-1">
-                  {scanResult.status === 'success' && <CheckCircle2 className="w-8 h-8 text-green-500" />}
-                  {scanResult.status === 'not_found' && <XCircle className="w-8 h-8 text-red-500" />}
-                  {scanResult.status === 'scanning' && <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg text-white">{scanResult.message}</h3>
-                  <p className="text-xl font-mono text-yellow-400 my-1">{scannedText}</p>
-                  {scanResult.bookingData && (
-                    <div className="text-sm text-gray-300 mt-2">
-                      <p>Khách: {scanResult.bookingData.profiles?.full_name}</p>
-                      <p>Xe: {scanResult.bookingData.vehicle_number}</p>
+          {/* RESULT POPUP CARD */}
+          {scanResult && (
+            <div className="absolute bottom-20 left-4 right-4 z-50 animate-in slide-in-from-bottom-10">
+                <Card className={`bg-slate-950/90 backdrop-blur-xl border-l-4 p-6 text-white shadow-2xl ${scanResult.status === 'success' ? 'border-l-green-500 border-white/10' : 'border-l-red-500 border-white/10'}`}>
+                    <div className="flex items-start gap-4">
+                        <div className={`p-3 rounded-full ${scanResult.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {scanResult.status === 'success' ? <CheckCircle2 className="w-8 h-8"/> : <XCircle className="w-8 h-8"/>}
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-xl font-bold uppercase tracking-wide">
+                                {scanResult.status === 'success' ? "GATE OPENING..." : "ACCESS DENIED"}
+                            </h3>
+                            <p className="text-4xl font-black font-mono mt-2 tracking-widest text-yellow-400">{scanResult.plate}</p>
+                            
+                            {scanResult.status === 'success' && (
+                                <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-slate-400 bg-white/5 p-3 rounded">
+                                    <div>Chủ xe: <span className="text-white font-bold">{scanResult.data.user_name}</span></div>
+                                    <div>Bãi xe: <span className="text-white font-bold">{scanResult.data.lot_name}</span></div>
+                                    <div>Giờ vào: <span className="text-white font-bold">{new Date(scanResult.data.start_time).toLocaleTimeString()}</span></div>
+                                    <div>Phí: <span className="text-green-400 font-bold">{scanResult.data.total_cost.toLocaleString()}đ</span></div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                  )}
-                </div>
-              </div>
-              <Button className="w-full mt-4 bg-white text-black hover:bg-gray-200" onClick={() => { setScanResult(null); setScannedText(""); toggleAutoScan(); }}>Tiếp tục</Button>
-            </Card>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-gray-400 text-sm">{isScanning ? "Đang quét..." : "Sẵn sàng"}</p>
-              <Button 
-                size="xl" 
-                className={`h-20 w-20 rounded-full border-4 transition-all duration-300 ${isScanning ? "bg-red-600 border-red-400 animate-pulse" : "bg-white text-black border-gray-300"}`}
-                onClick={toggleAutoScan}
-              >
-                {isScanning ? <div className="w-6 h-6 bg-white rounded-sm" /> : <Scan className="h-8 w-8" />}
-              </Button>
+                    <Button className="w-full mt-6 bg-white text-black hover:bg-slate-200 font-bold" onClick={() => { setScanResult(null); toggleAutoScan(); }}>
+                        TIẾP TỤC QUÉT (AUTO)
+                    </Button>
+                </Card>
             </div>
           )}
+        </div>
+
+        {/* CONTROL BAR */}
+        <div className="h-24 bg-slate-950 border-t border-slate-800 flex items-center justify-center gap-6 px-6 relative z-30">
+            <Button 
+                size="icon" 
+                className={`h-16 w-16 rounded-full border-4 transition-all duration-500 ${isScanning ? 'bg-red-600 border-red-900 shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse' : 'bg-cyan-600 border-cyan-900 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.4)]'}`}
+                onClick={toggleAutoScan}
+            >
+                {isScanning ? <div className="w-6 h-6 bg-white rounded-sm" /> : <Scan className="w-8 h-8 text-white" />}
+            </Button>
+
+            <div className="absolute right-6 flex gap-2">
+                <Button variant="outline" size="icon" className="border-slate-700 bg-transparent text-slate-400" onClick={() => setManualMode(!manualMode)}>
+                    {manualMode ? <Lock className="w-5 h-5 text-red-500"/> : <ShieldAlert className="w-5 h-5"/>}
+                </Button>
+            </div>
         </div>
       </main>
       
       <style>{`
-        @keyframes scan-laser { 0% { top: 0; opacity: 0.5; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0.5; } }
-        .animate-scan-laser { animation: scan-laser 2s linear infinite; }
-        /* Mask làm sáng vùng giữa */
-        .mask-scan-bright {
-           -webkit-mask-image: radial-gradient(rectangle, transparent 50%, black 100%);
-           mask-image: radial-gradient(transparent 0%, black 100%);
-           clip-path: polygon(0% 0%, 0% 100%, 7.5% 100%, 7.5% 32.5%, 92.5% 32.5%, 92.5% 67.5%, 7.5% 67.5%, 7.5% 100%, 100% 100%, 100% 0%);
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan {
+            animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            background: linear-gradient(to bottom, transparent, rgba(6,182,212,0.5), transparent);
+            height: 10%;
         }
       `}</style>
     </div>
