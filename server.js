@@ -266,5 +266,45 @@ app.post('/api/bookings', async (req, res) => {
         res.json({ success: true });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
+// 5. FINTECH API (CỔNG THANH TOÁN)
+// ==========================================
+app.post('/api/payment/confirm', async (req, res) => {
+    const { bookingId, method, amount } = req.body;
+    // method: 'momo', 'visa', 'crypto'
+    
+    try {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
 
+        try {
+            // 1. Cập nhật trạng thái Booking
+            await new sql.Request(transaction)
+                .input('bid', sql.Int, bookingId)
+                .query("UPDATE Bookings SET status = 'completed', updated_at = GETDATE() WHERE id = @bid");
+
+            // 2. Ghi log giao dịch (Giả lập bảng Payments nếu chưa có, hoặc ghi vào Notes)
+            // Ở đây ta update note để đơn giản hóa
+            const note = `Paid via ${method.toUpperCase()} - ${new Date().toISOString()}`;
+            await new sql.Request(transaction)
+                .input('bid', sql.Int, bookingId)
+                .input('n', sql.NVarChar, note)
+                .query("UPDATE Bookings SET notes = @n WHERE id = @bid");
+
+            await transaction.commit();
+            
+            // Giả lập độ trễ ngân hàng
+            setTimeout(() => {
+                console.log(`💰 [PAYMENT] ${amount} VND received via ${method}`);
+            }, 1000);
+
+            res.json({ success: true, transactionId: `TXN-${Date.now()}-${Math.floor(Math.random()*1000)}` });
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
+    } catch (err) { 
+        res.status(500).json({ success: false, message: err.message }); 
+    }
+});
 app.listen(PORT, () => console.log(`🔥 [SYSTEM] SERVER ONLINE AT http://localhost:${PORT}`));

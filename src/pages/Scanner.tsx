@@ -3,42 +3,65 @@ import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Scan, RefreshCw, CheckCircle2, XCircle, Zap, ShieldAlert, Lock } from "lucide-react";
+import { Scan, Lock, ShieldCheck, Zap, Aperture, Crosshair } from "lucide-react";
 import { useCamera } from "@/hooks/use-camera";
 import { scanLicensePlate } from "@/lib/vision-engine";
+import { motion, AnimatePresence } from "framer-motion";
 
-// --- HUD COMPONENT (Giao diện Iron Man) ---
 const ScannerHUD = ({ scanning }: { scanning: boolean }) => (
   <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
-    {/* Corner Brackets */}
-    <div className="absolute top-4 left-4 w-16 h-16 border-l-4 border-t-4 border-cyan-500 rounded-tl-xl"></div>
-    <div className="absolute top-4 right-4 w-16 h-16 border-r-4 border-t-4 border-cyan-500 rounded-tr-xl"></div>
-    <div className="absolute bottom-4 left-4 w-16 h-16 border-l-4 border-b-4 border-cyan-500 rounded-bl-xl"></div>
-    <div className="absolute bottom-4 right-4 w-16 h-16 border-r-4 border-b-4 border-cyan-500 rounded-br-xl"></div>
+    {/* Tech Grid Background */}
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]"></div>
+
+    {/* Corners */}
+    <div className="absolute top-8 left-8 w-24 h-24 border-l-4 border-t-4 border-cyan-500/80 rounded-tl-3xl drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>
+    <div className="absolute top-8 right-8 w-24 h-24 border-r-4 border-t-4 border-cyan-500/80 rounded-tr-3xl drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>
+    <div className="absolute bottom-24 left-8 w-24 h-24 border-l-4 border-b-4 border-cyan-500/80 rounded-bl-3xl drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>
+    <div className="absolute bottom-24 right-8 w-24 h-24 border-r-4 border-b-4 border-cyan-500/80 rounded-br-3xl drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>
     
-    {/* Center Crosshair */}
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-40 border border-cyan-500/30 rounded-lg bg-cyan-500/5 backdrop-blur-[1px]">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-cyan-500/20"></div>
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full h-[1px] bg-cyan-500/20"></div>
+    {/* Central Focus */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <motion.div 
+            animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            className="w-64 h-64 border border-cyan-500/30 rounded-full flex items-center justify-center"
+        >
+             <div className="w-60 h-60 border border-dashed border-cyan-500/20 rounded-full"></div>
+        </motion.div>
+        <Crosshair className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-red-500/80" />
     </div>
 
-    {/* Scanning Line Animation */}
+    {/* Scanning Laser */}
     {scanning && (
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent animate-scan"></div>
+        <div className="absolute top-0 left-0 w-full h-2 bg-red-500/50 shadow-[0_0_30px_#ef4444] animate-scan-laser"></div>
     )}
 
-    {/* Status Text */}
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/70 text-cyan-400 px-4 py-1 rounded font-mono text-xs tracking-[0.2em] border border-cyan-900">
-        {scanning ? "SYSTEM SCANNING..." : "STANDBY MODE"}
+    {/* Data Stream Text */}
+    <div className="absolute top-1/3 right-12 text-[10px] font-mono text-cyan-500/70 space-y-1 hidden md:block">
+        <p>SYS_OPT: NORMAL</p>
+        <p>OCR_ENGINE: ONLINE</p>
+        <p>LATENCY: 14ms</p>
+        <p>NET_SEC: ENCRYPTED</p>
     </div>
+
+    <style>{`
+        @keyframes scan-laser {
+            0% { top: 10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 90%; opacity: 0; }
+        }
+        .animate-scan-laser {
+            animation: scan-laser 2s linear infinite;
+        }
+    `}</style>
   </div>
 );
 
 const Scanner = () => {
   const { videoRef, startCamera, captureImage } = useCamera();
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<any>(null);
-  const [manualMode, setManualMode] = useState(false);
+  const [result, setResult] = useState<any>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -47,10 +70,7 @@ const Scanner = () => {
   }, []);
 
   const stopScanning = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
+    if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
     setIsScanning(false);
   };
 
@@ -59,54 +79,41 @@ const Scanner = () => {
     if (!canvas) return;
 
     try {
-      // 1. OCR Xử lý ảnh (Local)
       const plateNumber = await scanLicensePlate(canvas);
-      
       if (plateNumber) {
         stopScanning();
-        // 2. Gọi API kiểm tra
-        await checkBooking(plateNumber);
+        checkBooking(plateNumber);
       }
-    } catch (error) {
-      console.error("Lỗi xử lý ảnh:", error);
-    }
+    } catch (error) { console.error(error); }
   };
 
-  const checkBooking = async (plateNumber: string) => {
-    toast.loading(`Đang phân tích biển số: ${plateNumber}...`);
-    
+  const checkBooking = async (plate: string) => {
+    toast.loading(`Phát hiện biển số: ${plate}...`);
     try {
-      const response = await fetch('http://localhost:3000/api/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plate: plateNumber })
-      });
+        const res = await fetch('http://localhost:3000/api/scan', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ plate })
+        });
+        const data = await res.json();
+        toast.dismiss();
 
-      const result = await response.json();
-      toast.dismiss();
-
-      if (result.success) {
-        setScanResult({ status: 'success', data: result.data, plate: plateNumber });
-        // Phát âm thanh (Giả lập)
-        const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/scifi_laser_1.ogg');
-        audio.play().catch(() => {});
-        toast.success(`XÁC THỰC THÀNH CÔNG: ${plateNumber}`);
-      } else {
-        setScanResult({ status: 'not_found', plate: plateNumber });
-        toast.error("KHÔNG TÌM THẤY DỮ LIỆU VÉ XE!");
-      }
-    } catch (err) {
-      toast.error("Lỗi kết nối Server");
-    }
+        if (data.success) {
+            setResult({ type: 'success', ...data.data });
+            // Play Sound
+            new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3').play().catch(()=>{});
+        } else {
+            setResult({ type: 'error', plate });
+            new Audio('https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3').play().catch(()=>{});
+        }
+    } catch (e) { toast.error("Lỗi Server"); }
   };
 
   const toggleAutoScan = () => {
-    if (isScanning) {
-      stopScanning();
-    } else {
-      setIsScanning(true);
-      setScanResult(null);
-      scanIntervalRef.current = setInterval(handleScan, 800); // Scan mỗi 0.8s
+    if (isScanning) stopScanning();
+    else {
+        setIsScanning(true);
+        setResult(null);
+        scanIntervalRef.current = setInterval(handleScan, 800);
     }
   };
 
@@ -115,85 +122,69 @@ const Scanner = () => {
       <Header />
       
       <main className="flex-1 relative flex flex-col">
-        {/* VIDEO FEED AREA */}
         <div className="flex-1 relative bg-slate-900 flex items-center justify-center overflow-hidden">
-          <video 
-            ref={videoRef} 
-            className="absolute inset-0 w-full h-full object-cover opacity-80"
-            playsInline 
-            muted 
-            autoPlay
-          />
+          <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[30%]" playsInline muted autoPlay />
           
-          {/* Noise Texture Overlay */}
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-          
-          {/* THE HUD LAYER */}
           <ScannerHUD scanning={isScanning} />
 
-          {/* RESULT POPUP CARD */}
-          {scanResult && (
-            <div className="absolute bottom-20 left-4 right-4 z-50 animate-in slide-in-from-bottom-10">
-                <Card className={`bg-slate-950/90 backdrop-blur-xl border-l-4 p-6 text-white shadow-2xl ${scanResult.status === 'success' ? 'border-l-green-500 border-white/10' : 'border-l-red-500 border-white/10'}`}>
-                    <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-full ${scanResult.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                            {scanResult.status === 'success' ? <CheckCircle2 className="w-8 h-8"/> : <XCircle className="w-8 h-8"/>}
+          <AnimatePresence>
+              {result && (
+                <motion.div 
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    className="absolute bottom-28 left-4 right-4 z-50 md:left-auto md:right-auto md:w-[400px]"
+                >
+                    <Card className={`backdrop-blur-xl border-2 p-6 text-white shadow-[0_0_50px_rgba(0,0,0,0.5)] ${result.type === 'success' ? 'bg-green-950/90 border-green-500' : 'bg-red-950/90 border-red-500'}`}>
+                        <div className="flex items-start gap-4">
+                            <div className={`p-3 rounded-full ${result.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                                {result.type === 'success' ? <ShieldCheck className="w-8 h-8 text-white"/> : <Lock className="w-8 h-8 text-white"/>}
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black uppercase italic tracking-wider">
+                                    {result.type === 'success' ? "ACCESS GRANTED" : "ACCESS DENIED"}
+                                </h3>
+                                <p className="font-mono text-lg text-white/80 mt-1">{result.type === 'success' ? result.vehicle_number : result.plate}</p>
+                                
+                                {result.type === 'success' && (
+                                    <div className="mt-4 text-xs bg-black/30 p-3 rounded border border-white/10 space-y-1">
+                                        <div className="flex justify-between"><span>Chủ xe:</span> <span className="font-bold">{result.user_name}</span></div>
+                                        <div className="flex justify-between"><span>Giờ vào:</span> <span>{new Date(result.start_time).toLocaleTimeString()}</span></div>
+                                        <div className="mt-2 pt-2 border-t border-white/10 text-center font-bold text-green-400">WELCOME BACK, SIR!</div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <h3 className="text-xl font-bold uppercase tracking-wide">
-                                {scanResult.status === 'success' ? "GATE OPENING..." : "ACCESS DENIED"}
-                            </h3>
-                            <p className="text-4xl font-black font-mono mt-2 tracking-widest text-yellow-400">{scanResult.plate}</p>
-                            
-                            {scanResult.status === 'success' && (
-                                <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-slate-400 bg-white/5 p-3 rounded">
-                                    <div>Chủ xe: <span className="text-white font-bold">{scanResult.data.user_name}</span></div>
-                                    <div>Bãi xe: <span className="text-white font-bold">{scanResult.data.lot_name}</span></div>
-                                    <div>Giờ vào: <span className="text-white font-bold">{new Date(scanResult.data.start_time).toLocaleTimeString()}</span></div>
-                                    <div>Phí: <span className="text-green-400 font-bold">{scanResult.data.total_cost.toLocaleString()}đ</span></div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <Button className="w-full mt-6 bg-white text-black hover:bg-slate-200 font-bold" onClick={() => { setScanResult(null); toggleAutoScan(); }}>
-                        TIẾP TỤC QUÉT (AUTO)
-                    </Button>
-                </Card>
-            </div>
-          )}
+                        <Button className="w-full mt-4 bg-white/10 hover:bg-white/20 border border-white/20" onClick={() => { setResult(null); toggleAutoScan(); }}>
+                            TIẾP TỤC QUÉT
+                        </Button>
+                    </Card>
+                </motion.div>
+              )}
+          </AnimatePresence>
         </div>
 
         {/* CONTROL BAR */}
-        <div className="h-24 bg-slate-950 border-t border-slate-800 flex items-center justify-center gap-6 px-6 relative z-30">
+        <div className="h-24 bg-black/90 border-t border-slate-800 flex items-center justify-center gap-8 px-6 relative z-30 backdrop-blur-md">
+            <div className="text-center hidden md:block">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest">AI Engine</p>
+                <p className="text-xs font-bold text-green-500">READY</p>
+            </div>
+            
             <Button 
                 size="icon" 
-                className={`h-16 w-16 rounded-full border-4 transition-all duration-500 ${isScanning ? 'bg-red-600 border-red-900 shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse' : 'bg-cyan-600 border-cyan-900 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.4)]'}`}
+                className={`h-16 w-16 rounded-full border-4 transition-all duration-300 shadow-2xl ${isScanning ? 'bg-red-600 border-red-900 animate-pulse' : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500 hover:scale-110'}`}
                 onClick={toggleAutoScan}
             >
-                {isScanning ? <div className="w-6 h-6 bg-white rounded-sm" /> : <Scan className="w-8 h-8 text-white" />}
+                {isScanning ? <div className="w-6 h-6 bg-white rounded-sm" /> : <Aperture className="w-8 h-8 text-white animate-spin-slow" />}
             </Button>
 
-            <div className="absolute right-6 flex gap-2">
-                <Button variant="outline" size="icon" className="border-slate-700 bg-transparent text-slate-400" onClick={() => setManualMode(!manualMode)}>
-                    {manualMode ? <Lock className="w-5 h-5 text-red-500"/> : <ShieldAlert className="w-5 h-5"/>}
-                </Button>
+            <div className="text-center hidden md:block">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest">Mode</p>
+                <p className="text-xs font-bold text-blue-500">AUTO</p>
             </div>
         </div>
       </main>
-      
-      <style>{`
-        @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        .animate-scan {
-            animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            background: linear-gradient(to bottom, transparent, rgba(6,182,212,0.5), transparent);
-            height: 10%;
-        }
-      `}</style>
     </div>
   );
 };
