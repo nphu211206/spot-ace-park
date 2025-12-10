@@ -76,3 +76,22 @@ VALUES
 (N'Bitexco Financial Tower', N'2 Hải Triều, Q1', 80, 25, 100000, 120000, 5.0, 'Valet,VIP Lounge', N'Dành riêng cho khách VIP.');
 
 PRINT '>>> [SUCCESS] DATABASE ĐÃ ĐƯỢC KHÔI PHỤC CHUẨN CHỈ <<<';
+USE SpotAcePark;
+GO
+
+-- Tạo bảng mã kích hoạt
+CREATE TABLE ActivationCodes (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    code NVARCHAR(50) UNIQUE NOT NULL, -- Mã (VD: 'VINCOM-2024')
+    parking_lot_id INT NULL,           -- Mã này dành cho bãi xe nào? (NULL = Tạo bãi mới)
+    role NVARCHAR(20) DEFAULT 'manager', -- Mã này cấp quyền gì?
+    is_used BIT DEFAULT 0,             -- Đã dùng chưa?
+    created_at DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- Tạo dữ liệu mẫu (Master Code cho chúng ta và Code bán cho khách)
+INSERT INTO ActivationCodes (code, role, is_used) VALUES ('MASTER-GOD-MODE', 'admin', 0); -- Dành cho bạn vào Admin
+INSERT INTO ActivationCodes (code, role, is_used) VALUES ('VINCOM-MANAGER-01', 'manager', 0); -- Bán cho quản lý Vincom
+INSERT INTO ActivationCodes (code, role, is_used) VALUES ('LANDMARK-MANAGER-02', 'manager', 0); -- Bán cho quản lý Landmark
+GO

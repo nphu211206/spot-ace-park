@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Scanner from "./pages/Scanner";
 import BookingPage from "./pages/BookingPage"; // <--- IMPORT MỚI
 import NotFound from "./pages/NotFound";
+import ManagerDashboard from "./pages/ManagerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,11 @@ const App = () => (
               <Scanner />
             </ProtectedRoute>
           } />
+          <Route path="/manager" element={
+  <ProtectedRoute>
+    <ManagerDashboard />
+  </ProtectedRoute>
+} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

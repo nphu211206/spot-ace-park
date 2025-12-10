@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { CloudRain, CloudSun, DollarSign, Lock, Unlock, AlertOctagon, Megaphone } from "lucide-react";
+import { Input } from "@/components/ui/input"; // Thêm Input
+import { CloudRain, CloudSun, DollarSign, Lock, Unlock, AlertOctagon, Megaphone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -10,6 +11,7 @@ const ControlPanel = () => {
     const [weather, setWeather] = useState<'sunny' | 'rainy'>('sunny');
     const [pricingMode, setPricingMode] = useState<'standard' | 'surge'>('standard');
     const [lockdown, setLockdown] = useState(false);
+    const [broadcastMsg, setBroadcastMsg] = useState(""); // State cho tin nhắn tùy chỉnh
 
     const handleWeather = () => {
         const newWeather = weather === 'sunny' ? 'rainy' : 'sunny';
@@ -34,7 +36,6 @@ const ControlPanel = () => {
                 description: "Tất cả cổng Barrier đã đóng. Ngừng nhận xe mới.",
                 duration: 5000
             });
-            // Phát âm thanh cảnh báo
             const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
             audio.play().catch(() => {});
         } else {
@@ -42,10 +43,16 @@ const ControlPanel = () => {
         }
     };
 
-    const broadcast = () => {
-        toast.success("Đã gửi thông báo toàn hệ thống", {
-            description: "'Bãi xe Vincom Q1 sắp hết chỗ. Vui lòng chuyển hướng sang Bitexco.'"
+    // SỬA LỖI 1: Gửi thông báo tùy chỉnh thay vì random
+    const handleBroadcast = () => {
+        if (!broadcastMsg.trim()) {
+            toast.error("Vui lòng nhập nội dung thông báo!");
+            return;
+        }
+        toast.success("Đã phát thông báo toàn hệ thống", {
+            description: `Nội dung: "${broadcastMsg}"`
         });
+        setBroadcastMsg(""); // Reset sau khi gửi
     };
 
     return (
@@ -58,7 +65,7 @@ const ControlPanel = () => {
             <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {/* Weather Control */}
-                    <div className="space-y-3 p-4 rounded-xl bg-slate-950/50 border border-slate-800">
+                    <div className="space-y-3 p-4 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-blue-500/50 transition-colors">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400 text-sm font-mono">SIMULATE WEATHER</span>
                             <Switch checked={weather === 'rainy'} onCheckedChange={handleWeather} />
@@ -75,7 +82,7 @@ const ControlPanel = () => {
                     </div>
 
                     {/* Pricing Control */}
-                    <div className="space-y-3 p-4 rounded-xl bg-slate-950/50 border border-slate-800">
+                    <div className="space-y-3 p-4 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-green-500/50 transition-colors">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400 text-sm font-mono">PRICING STRATEGY</span>
                             <Switch checked={pricingMode === 'surge'} onCheckedChange={handlePricing} className="data-[state=checked]:bg-red-500"/>
@@ -96,7 +103,7 @@ const ControlPanel = () => {
                     </div>
 
                     {/* Lockdown Control */}
-                    <div className="space-y-3 p-4 rounded-xl bg-slate-950/50 border border-slate-800">
+                    <div className="space-y-3 p-4 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-red-500/50 transition-colors">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400 text-sm font-mono">SYSTEM LOCK</span>
                             <Button 
@@ -116,12 +123,24 @@ const ControlPanel = () => {
                         </div>
                     </div>
 
-                    {/* Broadcast */}
-                    <div className="flex flex-col justify-center p-4 rounded-xl bg-slate-950/50 border border-slate-800">
-                        <Button onClick={broadcast} className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-900/20">
-                            <Megaphone className="w-4 h-4 mr-2"/> PHÁT THÔNG BÁO
-                        </Button>
-                        <p className="text-[10px] text-center text-slate-500 mt-2">Gửi tin nhắn đến toàn bộ App User</p>
+                    {/* Broadcast System (Nâng cấp) */}
+                    <div className="flex flex-col justify-between p-4 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-indigo-500/50 transition-colors">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Megaphone className="w-4 h-4 text-indigo-400"/>
+                            <span className="text-slate-400 text-sm font-mono">BROADCAST</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <Input 
+                                className="h-8 text-xs bg-slate-900 border-slate-700 focus:border-indigo-500" 
+                                placeholder="Nhập thông báo..." 
+                                value={broadcastMsg}
+                                onChange={(e) => setBroadcastMsg(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleBroadcast()}
+                            />
+                            <Button size="icon" className="h-8 w-8 bg-indigo-600 hover:bg-indigo-700" onClick={handleBroadcast}>
+                                <Send className="w-3 h-3" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </CardContent>

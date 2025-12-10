@@ -5,6 +5,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import ControlPanel from "@/components/admin/ControlPanel"; // Import mới
 import JarvisWidget from "@/components/admin/JarvisWidget"; // Import mới
 import { toast } from "sonner";
+import PartnerManager from "@/components/admin/PartnerManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -38,16 +39,22 @@ const Admin = () => {
     <div className="min-h-screen bg-[#020617] overflow-x-hidden">
       <Header />
       <main className="container mx-auto px-4 py-6 pb-24">
-        {/* DASHBOARD CHÍNH */}
+        {/* DASHBOARD VĨ MÔ */}
         <AdminDashboard />
         
-        {/* GOD MODE PANEL */}
-        <div className="animate-in slide-in-from-bottom-10 duration-1000 delay-200">
-           <ControlPanel />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            {/* GOD MODE CONTROLS */}
+            <div className="animate-in slide-in-from-left-10 duration-700">
+               <ControlPanel />
+            </div>
+
+            {/* MÁY IN MÃ ĐỐI TÁC (NEW) */}
+            <div className="animate-in slide-in-from-right-10 duration-700">
+               <PartnerManager />
+            </div>
         </div>
       </main>
 
-      {/* J.A.R.V.I.S LUÔN HIỂN THỊ */}
       <JarvisWidget />
     </div>
   );
