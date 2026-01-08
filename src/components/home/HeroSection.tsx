@@ -1,91 +1,237 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, DollarSign, Star, ArrowRight } from "lucide-react";
-import heroImage from "@/assets/parking-hero.jpg";
-import { useEffect, useState } from "react";
+import { MapPin, Clock, DollarSign, Star, ArrowRight, Sparkles, Zap, Shield, Car } from "lucide-react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
+// ==========================================
+// ✨ PARTICLE SYSTEM
+// ==========================================
+const ParticleField = () => {
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; size: number; speed: number; opacity: number }>>([]);
+
+  useEffect(() => {
+    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 1,
+      speed: Math.random() * 20 + 10,
+      opacity: Math.random() * 0.5 + 0.2
+    }));
+    setParticles(newParticles);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full bg-blue-400"
+          style={{ left: `${p.x}%`, width: p.size, height: p.size, opacity: p.opacity }}
+          animate={{ y: [0, -window.innerHeight], opacity: [p.opacity, 0] }}
+          transition={{ duration: p.speed, repeat: Infinity, ease: "linear", delay: Math.random() * 10 }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// ==========================================
+// 🌊 GRADIENT MESH BACKGROUND
+// ==========================================
+const GradientMesh = () => (
+  <div className="absolute inset-0 overflow-hidden">
+    <motion.div
+      className="absolute -inset-[100%] opacity-30"
+      style={{ background: "radial-gradient(circle at 30% 20%, #3b82f6 0%, transparent 50%), radial-gradient(circle at 70% 60%, #8b5cf6 0%, transparent 50%), radial-gradient(circle at 40% 80%, #06b6d4 0%, transparent 40%)" }}
+      animate={{ rotate: [0, 360] }}
+      transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+    />
+  </div>
+);
+
+// ==========================================
+// 📊 ANIMATED COUNTER
+// ==========================================
+const AnimatedCounter = ({ value, suffix = "" }: { value: number; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const duration = 2000;
+    const steps = 60;
+    const increment = value / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= value) { setCount(value); clearInterval(timer); }
+      else setCount(Math.floor(current));
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [value]);
+  return <span>{count.toLocaleString()}{suffix}</span>;
+};
+
+// ==========================================
+// 🎯 MAIN HERO SECTION
+// ==========================================
 const HeroSection = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const user = localStorage.getItem('spot_user');
     setIsLoggedIn(!!user);
   }, []);
 
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
+  }, []);
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-slate-900">
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src={heroImage} 
-          alt="Smart Parking System"
-          className="w-full h-full object-cover opacity-40 scale-105 animate-in fade-in zoom-in duration-1000"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent"></div>
-      </div>
+    <section
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-950"
+      onMouseMove={handleMouseMove}
+    >
+      {/* Animated Background Layers */}
+      <GradientMesh />
+      <ParticleField />
+
+      {/* Grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+
+      {/* Mouse follow glow */}
+      <motion.div
+        className="absolute w-[600px] h-[600px] rounded-full bg-blue-500/10 blur-3xl pointer-events-none"
+        animate={{ x: mousePos.x * 400 - 300, y: mousePos.y * 400 - 300 }}
+        transition={{ type: "spring", damping: 30, stiffness: 200 }}
+      />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="max-w-5xl mx-auto animate-in slide-in-from-bottom-10 duration-700">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6 backdrop-blur-md">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-5xl mx-auto"
+        >
+          {/* Badge */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 mb-8"
+          >
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              🚀 Hệ thống AI 4.0 • Công nghệ #1 Việt Nam
             </span>
-            Hệ thống AI 4.0 Đẳng Cấp Châu Lục
-          </div>
+          </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight tracking-tight text-white drop-shadow-2xl">
-            Tìm chỗ đỗ xe <br />
-            <span className="bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
-              Thông Minh & Tự Động
+          {/* Main Title */}
+          <motion.h1
+            className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-[0.9] tracking-tight"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <span className="text-white">Đỗ xe</span>
+            <br />
+            <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
+              Thông Minh
             </span>
-          </h1>
-          
-          <div className="flex flex-col sm:flex-row gap-5 justify-center items-center mb-16">
-            <Button 
-              size="xl" 
-              onClick={() => navigate("/parking")} // Dùng navigate trực tiếp
-              type="button" // Bắt buộc để không bị form submit
-              className="h-16 px-8 text-lg font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:shadow-[0_0_50px_rgba(37,99,235,0.7)] transition-all scale-100 hover:scale-105 border-0"
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            Tìm & đặt chỗ đỗ xe tự động với AI. Tiết kiệm thời gian, tối ưu chi phí.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Button
+              size="lg"
+              onClick={() => navigate("/parking")}
+              className="h-14 px-8 text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:shadow-[0_0_60px_rgba(59,130,246,0.6)] transition-all hover:scale-105 border-0 rounded-xl"
             >
-              <MapPin className="mr-2 h-6 w-6" />
-              Tìm bãi đỗ xe ngay
+              <Car className="mr-2 h-5 w-5" /> Tìm bãi đỗ xe ngay
             </Button>
-            
-            <Button 
-              variant="outline" 
-              size="xl" 
+
+            <Button
+              variant="outline"
+              size="lg"
               onClick={() => navigate(isLoggedIn ? "/bookings" : "/auth")}
-              type="button"
-              className="h-16 px-8 text-lg font-medium text-white border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-sm hover:border-white/40 transition-all"
+              className="h-14 px-8 text-lg font-medium text-white border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-xl"
             >
-              {isLoggedIn ? (
-                <>Lịch sử đặt chỗ <ArrowRight className="ml-2 h-5 w-5" /></>
-              ) : (
-                <>Đăng ký ngay <ArrowRight className="ml-2 h-5 w-5" /></>
-              )}
+              {isLoggedIn ? "Lịch sử đặt chỗ" : "Đăng ký miễn phí"} <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </div>
+          </motion.div>
 
-          {/* Features */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+          {/* Stats */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
             {[
-              { icon: MapPin, title: "Bản đồ 3D", desc: "Trực quan hóa", color: "text-blue-400" },
-              { icon: Clock, title: "Thời gian thực", desc: "Cập nhật tức thì", color: "text-cyan-400" },
-              { icon: DollarSign, title: "Giá thông minh", desc: "Tối ưu chi phí", color: "text-green-400" },
-              { icon: Star, title: "Đẳng cấp VIP", desc: "Trải nghiệm 5 sao", color: "text-yellow-400" }
-            ].map((feature, index) => (
-              <div key={index} className="group p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-white/10 hover:bg-slate-800/80 transition-all backdrop-blur-sm cursor-default">
-                <feature.icon className={`h-8 w-8 ${feature.color} mb-3 mx-auto group-hover:scale-110 transition-transform`} />
-                <h3 className="font-bold text-white mb-1">{feature.title}</h3>
-                <p className="text-xs text-slate-400">{feature.desc}</p>
+              { value: 50000, suffix: "+", label: "Người dùng", icon: "👥" },
+              { value: 200, suffix: "+", label: "Bãi đỗ xe", icon: "🅿️" },
+              { value: 99, suffix: "%", label: "Hài lòng", icon: "⭐" },
+              { value: 24, suffix: "/7", label: "Hỗ trợ", icon: "🔧" }
+            ].map((stat, i) => (
+              <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                <div className="text-2xl mb-1">{stat.icon}</div>
+                <div className="text-2xl md:text-3xl font-black text-white">
+                  <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                </div>
+                <div className="text-xs text-slate-400">{stat.label}</div>
               </div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+
+          {/* Features */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            {[
+              { icon: MapPin, title: "Bản đồ 3D", desc: "Digital Twin", color: "from-blue-500 to-cyan-500" },
+              { icon: Zap, title: "AI Pricing", desc: "Giá động", color: "from-yellow-500 to-orange-500" },
+              { icon: Shield, title: "An toàn", desc: "Bảo mật 100%", color: "from-green-500 to-emerald-500" },
+              { icon: Star, title: "VIP", desc: "Ưu đãi độc quyền", color: "from-purple-500 to-pink-500" }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="group p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/0 border border-white/10 hover:border-white/20 transition-all cursor-default"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform shadow-lg`}>
+                  <feature.icon className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-bold text-white mb-1">{feature.title}</h3>
+                <p className="text-xs text-slate-400">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
       </div>
+
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
     </section>
   );
 };

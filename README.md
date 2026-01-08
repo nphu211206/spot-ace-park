@@ -1,73 +1,156 @@
-# Welcome to your Lovable project
+# 🚗 SPOT ACE PARK - Smart Parking Management System
 
-## Project info
+<div align="center">
 
-**URL**: https://lovable.dev/projects/7fae0fb6-ac3e-4083-b9d3-3c0eea5a5f35
+![Spot Ace Park](https://img.shields.io/badge/SPOT%20ACE-PARK-blue?style=for-the-badge&logo=car&logoColor=white)
+![Version](https://img.shields.io/badge/version-3.0.0-green?style=for-the-badge)
+![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react)
+![Three.js](https://img.shields.io/badge/Three.js-R3F-black?style=for-the-badge&logo=three.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)
 
-## How can I edit this code?
+**🎯 HỆ THỐNG QUẢN LÝ BÃI ĐỖ XE THÔNG MINH THẾ HỆ MỚI**
 
-There are several ways of editing your application.
+*Mô phỏng 3D siêu thực tế | AI Dynamic Pricing | IoT Sensors | Voice Control*
 
-**Use Lovable**
+[🚀 Demo](#demo) • [✨ Features](#features) • [🛠️ Installation](#installation) • [📖 Usage](#usage)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7fae0fb6-ac3e-4083-b9d3-3c0eea5a5f35) and start prompting.
+</div>
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🌟 Điểm Nổi Bật
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🎮 **Mô Hình 3D Siêu Thực Tế**
+- ☀️🌙 **Day/Night Mode** - Chuyển đổi chế độ ngày/đêm với ánh sáng động
+- 🚗 **Ultra Realistic Cars** - Xe 3D chi tiết với đèn pha, đèn hậu, mâm xe
+- ⚡ **EV Charging Stations** - Trạm sạc xe điện với animation LED
+- 📹 **CCTV Cameras** - Camera an ninh xoay 360° tự động
+- 💳 **Payment Kiosks** - Máy thanh toán tự động
+- 🚨 **Emergency Poles** - Cột khẩn cấp SOS
+- 🌳 **Dynamic Trees** - Cây cối đung đưa theo gió
+- 🚶 **Animated People** - Người đi bộ hoạt hình
+- 🏢 **City Buildings** - Tòa nhà background với cửa sổ phát sáng
+- ✨ **Particle Effects** - Hiệu ứng ánh sáng lấp lánh
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🤖 **AI & IoT Features**
+- 🧠 **AI Dynamic Pricing** - Định giá tự động theo nhu cầu & thời tiết
+- 🎙️ **JARVIS Voice Control** - Điều khiển bằng giọng nói tiếng Việt
+- 📡 **Real-time IoT Sensors** - Cảm biến đỗ xe thời gian thực
+- 🚧 **Smart Barrier Gates** - Barrier tự động với animation mượt mà
 
-Follow these steps:
+### 📊 **Command Center Dashboard**
+- 📈 **Multi-Chart Analytics** - Biểu đồ Area, Bar, Radar, Line
+- 🎥 **4K CCTV Grid** - Grid camera an ninh với AI detection
+- 💊 **System Health Radar** - Theo dõi CPU, RAM, Network, AI Engine
+- 📋 **Live Terminal Logs** - Log thời gian thực kiểu Matrix
+- ⚡ **Animated KPI Cards** - Thẻ thống kê với number animation
+- 🌡️ **Zone Occupancy** - Công suất từng khu vực
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 💳 **Premium Payment Gateway**
+- 📱 **Multi-method Support** - Momo, ZaloPay, Bank, Crypto
+- 🎊 **Confetti Celebration** - Pháo hoa khi thanh toán thành công
+- 🔊 **Sound Effects** - Âm thanh ka-ching vui nhộn
+- 🧾 **Digital Receipt** - Biên lai điện tử với QR Code
+- 📅 **Calendar Integration** - Thêm vào Google Calendar
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 🔐 **Multi-Role Authentication**
+- 👤 **Customer Portal** - Giao diện khách hàng
+- 👔 **Manager Dashboard** - Bảng điều khiển quản lý
+- 👑 **Admin War Room** - Trung tâm điều khiển tối cao
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🚀 Tech Stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | React 18, TypeScript, Vite |
+| **3D Graphics** | Three.js, React Three Fiber, Drei |
+| **UI/UX** | Tailwind CSS, Shadcn/UI, Framer Motion |
+| **Charts** | Recharts |
+| **State** | React Hooks |
+| **Backend** | Node.js, Express, Supabase |
+| **AI/Vision** | Custom OCR Engine |
+| **Voice** | Web Speech API |
+
+---
+
+## 📦 Installation
+
+```bash
+# Clone repository
+git clone https://github.com/nphu211206/spot-ace-park.git
+
+# Navigate to project
+cd spot-ace-park
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
+
+# Start backend server (separate terminal)
+node server.js
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🎮 Usage
 
-**Use GitHub Codespaces**
+### Truy cập các trang:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Page | URL | Description |
+|------|-----|-------------|
+| 🏠 Home | `/` | Trang chủ giới thiệu |
+| 🅿️ Parking | `/parking` | Danh sách bãi đỗ xe |
+| 🎮 3D View | `/booking/:id` | Mô hình 3D bãi xe |
+| 💳 Payment | `/booking/:id` | Cổng thanh toán |
+| 📱 Scanner | `/scanner` | Quét biển số xe |
+| 👔 Manager | `/manager` | Dashboard quản lý |
+| 👑 Admin | `/admin` | Command Center |
 
-## What technologies are used for this project?
+### Mã kích hoạt đặc biệt:
+- `SPOT_ACE_MASTER` - Quyền Admin
+- `SPOT_ACE_MANAGER` - Quyền Manager
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📸 Screenshots
 
-## How can I deploy this project?
+### 🎮 3D Parking Simulation
+- Mô hình bãi xe 3D với xe, người, cây cối
+- Chế độ ngày/đêm
+- Trạm sạc EV, camera CCTV
 
-Simply open [Lovable](https://lovable.dev/projects/7fae0fb6-ac3e-4083-b9d3-3c0eea5a5f35) and click on Share -> Publish.
+### 📊 Admin Command Center
+- Dashboard phong cách Cyberpunk
+- Real-time charts & metrics
+- CCTV grid với AI detection
 
-## Can I connect a custom domain to my Lovable project?
+### 💳 Payment Gateway
+- Giao diện thanh toán đẹp mắt
+- Hiệu ứng confetti
+- QR Code & digital receipt
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 👨‍💻 Author
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Nguyen Phu** - [@nphu211206](https://github.com/nphu211206)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+
+**⭐ Star this repo if you found it helpful!**
+
+Made with ❤️ and ☕ by Nguyen Phu
+
+</div>
