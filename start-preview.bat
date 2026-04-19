@@ -1,13 +1,13 @@
 @echo off
 setlocal
 chcp 65001 > nul
-title SPOT ACE PARK - Local Dev Start
-color 0B
+title SPOT ACE PARK - Preview Start
+color 0D
 cd /d "%~dp0"
 
 echo.
 echo ===============================================
-echo   SPOT ACE PARK - LOCAL DEV START
+echo   SPOT ACE PARK - PREVIEW START
 echo ===============================================
 echo.
 
@@ -15,7 +15,6 @@ where node > nul 2>&1
 if errorlevel 1 (
   color 0C
   echo [ERROR] Node.js chua duoc cai.
-  echo Hay cai Node.js 20 LTS truoc khi chay file nay.
   pause
   exit /b 1
 )
@@ -42,20 +41,27 @@ if not exist "node_modules\" (
 echo [INFO] Mo mock backend o port 3000...
 start "Spot Ace Mock API" cmd /k "cd /d ""%~dp0"" && color 0A && npm run mock-api"
 
-timeout /t 2 /nobreak > nul
+echo [INFO] Build frontend...
+call npm run build
+if errorlevel 1 (
+  color 0C
+  echo [ERROR] Build that bai.
+  pause
+  exit /b 1
+)
 
-echo [INFO] Mo frontend dev server o port 5173...
-start "Spot Ace Frontend Dev" cmd /k "cd /d ""%~dp0"" && color 0B && npm run dev"
+echo [INFO] Mo frontend preview o port 8080...
+start "Spot Ace Frontend Preview" cmd /k "cd /d ""%~dp0"" && color 0D && npm run preview:local"
 
 timeout /t 5 /nobreak > nul
 
 echo.
-echo [OK] App dang khoi dong.
-echo Frontend: http://localhost:5173
+echo [OK] Preview dang khoi dong.
+echo Frontend Preview: http://localhost:8080
 echo Mock API: http://localhost:3000/api/parking-lots
 echo.
 
-start http://localhost:5173
+start http://localhost:8080
 
 echo Nhan phim bat ky de dong cua so nay.
 pause > nul
