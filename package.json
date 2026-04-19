@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "mock-api": "node scripts/local-test-backend.cjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:local": "vite preview --host 0.0.0.0 --port 8080"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

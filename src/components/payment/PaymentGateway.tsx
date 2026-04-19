@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -25,21 +25,19 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from 'canvas-confetti';
+import { formatDurationLabel } from "@/lib/parking-pricing";
 
 interface PaymentGatewayProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: (txnId: string) => void;
+    onSuccess: (txnId: string) => void | Promise<void>;
     amount: number;
     bookingId: string;
     spotId?: string;
     parkingName?: string;
-    duration?: number;
+    durationMinutes?: number;
+    startTime?: string;
 }
-
-// Sound effect URL (cash register sound)
-const SUCCESS_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3';
-const TING_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
 
 const PaymentGateway = ({
     isOpen,
@@ -47,16 +45,16 @@ const PaymentGateway = ({
     onSuccess,
     amount,
     bookingId,
-    spotId = 'P-115',
+    spotId = 'A01',
     parkingName = 'Vincom Center Đồng Khởi',
-    duration = 2
+    durationMinutes = 120,
+    startTime
 }: PaymentGatewayProps) => {
     const [step, setStep] = useState<'method' | 'processing' | 'success'>('method');
     const [method, setMethod] = useState<'momo' | 'bank' | 'crypto'>('momo');
     const [transactionId, setTransactionId] = useState('');
     const [soundEnabled, setSoundEnabled] = useState(true);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const tingRef = useRef<HTMLAudioElement | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
 
     // Generate transaction ID
     const generateTxnId = () => {
@@ -86,12 +84,12 @@ const PaymentGateway = ({
         }
     }, [isOpen]);
 
-    // Preload audio
+    // Cleanup audio context
     useEffect(() => {
-        audioRef.current = new Audio(SUCCESS_SOUND_URL);
-        tingRef.current = new Audio(TING_SOUND_URL);
-        audioRef.current.volume = 0.5;
-        tingRef.current.volume = 0.3;
+        return () => {
+            audioContextRef.current?.close().catch(() => { });
+            audioContextRef.current = null;
+        };
     }, []);
 
     // Confetti burst effect
@@ -158,17 +156,79 @@ const PaymentGateway = ({
         }, 300);
     };
 
-    // Play sound effects
-    const playSuccessSound = () => {
+    const getAudioContext = async () => {
+        const AudioContextCtor =
+            window.AudioContext ||
+            (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+        if (!AudioContextCtor) {
+            return null;
+        }
+
+        if (!audioContextRef.current) {
+            audioContextRef.current = new AudioContextCtor();
+        }
+
+        if (audioContextRef.current.state === "suspended") {
+            await audioContextRef.current.resume();
+        }
+
+        return audioContextRef.current;
+    };
+
+    const scheduleTone = (
+        context: AudioContext,
+        {
+            frequency,
+            duration,
+            delay = 0,
+            gain = 0.03,
+            type = "sine",
+        }: {
+            frequency: number;
+            duration: number;
+            delay?: number;
+            gain?: number;
+            type?: OscillatorType;
+        },
+    ) => {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        const startAt = context.currentTime + delay;
+        const releaseAt = startAt + duration;
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, startAt);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(80, frequency * 0.92), releaseAt);
+
+        gainNode.gain.setValueAtTime(0.0001, startAt);
+        gainNode.gain.exponentialRampToValueAtTime(gain, startAt + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, releaseAt);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.start(startAt);
+        oscillator.stop(releaseAt + 0.04);
+    };
+
+    // Play sound effects locally so the modal does not depend on remote assets.
+    const playSuccessSound = async () => {
         if (!soundEnabled) return;
 
-        // Play ting sound first
-        tingRef.current?.play().catch(() => { });
+        try {
+            const context = await getAudioContext();
+            if (!context) {
+                return;
+            }
 
-        // Then play cash register sound
-        setTimeout(() => {
-            audioRef.current?.play().catch(() => { });
-        }, 200);
+            scheduleTone(context, { frequency: 880, duration: 0.14, gain: 0.018, type: "triangle" });
+            scheduleTone(context, { frequency: 1320, duration: 0.18, delay: 0.12, gain: 0.022, type: "triangle" });
+            scheduleTone(context, { frequency: 523.25, duration: 0.16, delay: 0.3, gain: 0.03, type: "square" });
+            scheduleTone(context, { frequency: 659.25, duration: 0.18, delay: 0.42, gain: 0.028, type: "square" });
+            scheduleTone(context, { frequency: 783.99, duration: 0.26, delay: 0.56, gain: 0.032, type: "square" });
+        } catch {
+            // Keep payment flow silent if Web Audio is unavailable.
+        }
     };
 
     const handlePayment = async () => {
@@ -183,15 +243,17 @@ const PaymentGateway = ({
             const data = await res.json();
 
             if (data.success) {
+                const confirmedTransactionId = data.transactionId || transactionId;
                 setTimeout(() => {
+                    setTransactionId(confirmedTransactionId);
                     setStep('success');
                     playSuccessSound();
                     fireConfetti();
                 }, 2000);
 
                 // Đóng modal sau 6s để user xem bill
-                setTimeout(() => {
-                    onSuccess(data.transactionId || transactionId);
+                setTimeout(async () => {
+                    await onSuccess(confirmedTransactionId);
                     onClose();
                 }, 8000);
             } else {
@@ -228,11 +290,11 @@ const PaymentGateway = ({
 
     // Add to calendar
     const addToCalendar = () => {
-        const startTime = new Date();
-        const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
+        const calendarStartTime = startTime ? new Date(startTime) : new Date();
+        const endTime = new Date(calendarStartTime.getTime() + durationMinutes * 60 * 1000);
         const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '');
 
-        const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Đỗ xe tại ${parkingName}`)}&dates=${formatDate(startTime)}/${formatDate(endTime)}&details=${encodeURIComponent(`Vị trí: ${spotId}\nMã giao dịch: ${transactionId}`)}&location=${encodeURIComponent(parkingName)}`;
+        const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Đỗ xe tại ${parkingName}`)}&dates=${formatDate(calendarStartTime)}/${formatDate(endTime)}&details=${encodeURIComponent(`Vị trí: ${spotId}\nMã giao dịch: ${transactionId}`)}&location=${encodeURIComponent(parkingName)}`;
 
         window.open(calendarUrl, '_blank');
     };
@@ -243,7 +305,7 @@ const PaymentGateway = ({
 
                 {/* HEADER VỚI HIỆU ỨNG GRADIENT */}
                 <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                    <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20"></div>
                     {/* Animated sparkles */}
                     <div className="absolute inset-0 overflow-hidden">
                         {[...Array(6)].map((_, i) => (
@@ -514,7 +576,7 @@ const PaymentGateway = ({
                                         </div>
                                         <div>
                                             <p className="text-xs text-slate-500 uppercase tracking-wider">Thời gian</p>
-                                            <p className="text-lg font-bold text-white mt-1">{duration} giờ</p>
+                                            <p className="text-lg font-bold text-white mt-1">{formatDurationLabel(durationMinutes)}</p>
                                         </div>
                                         <div className="col-span-2">
                                             <p className="text-xs text-slate-500 uppercase tracking-wider flex items-center gap-1">
