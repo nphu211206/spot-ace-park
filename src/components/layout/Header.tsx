@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Car, LogOut, User, LayoutDashboard, Menu, X, ScanLine, History, ShieldAlert } from "lucide-react";
+import { BatteryCharging, Car, LogOut, User, LayoutDashboard, Menu, X, ScanLine, ShieldAlert } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
@@ -78,6 +78,9 @@ const Header = () => {
           )}
 
           <Button variant="ghost" onClick={() => goTo('/parking')}>Tìm bãi xe</Button>
+          <Button variant="ghost" onClick={() => goTo('/charging')}>
+            <BatteryCharging className="mr-2 h-4 w-4" /> Trạm sạc EV
+          </Button>
           
           {user && (
             <>

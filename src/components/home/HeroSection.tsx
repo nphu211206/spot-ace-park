@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, DollarSign, Star, ArrowRight, Sparkles, Zap, Shield, Car } from "lucide-react";
+import { MapPin, Clock, DollarSign, Star, ArrowRight, Sparkles, Zap, Shield, Car, BatteryCharging } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
@@ -166,6 +166,14 @@ const HeroSection = () => {
               className="h-14 px-8 text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:shadow-[0_0_60px_rgba(59,130,246,0.6)] transition-all hover:scale-105 border-0 rounded-xl"
             >
               <Car className="mr-2 h-5 w-5" /> Tìm bãi đỗ xe ngay
+            </Button>
+
+            <Button
+              size="lg"
+              onClick={() => navigate("/charging")}
+              className="h-14 px-8 text-lg font-bold bg-white/10 text-white border border-emerald-400/30 backdrop-blur-sm hover:bg-emerald-400/15 hover:border-emerald-300/60 rounded-xl"
+            >
+              <BatteryCharging className="mr-2 h-5 w-5" /> Tìm trạm sạc EV
             </Button>
 
             <Button
