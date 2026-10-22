@@ -19,11 +19,20 @@ import {
 import * as THREE from "three";
 import { ParkingLot } from "@/pages/Parking";
 import { toast } from "sonner";
-import { Car as CarIcon, Eye, Moon, RotateCcw, Shield, Sun, Thermometer, Wind, Zap } from "lucide-react";
+import { Car as CarIcon, Eye, Moon, Navigation, RotateCcw, Shield, Sun, Thermometer, Wind, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  calculateIndoorPath,
+  getIndoorLandmarks,
+  IndoorLandmark,
+  PathNavigationResult,
+} from "./navigation/ParkingPathfinder";
+import { PathRibbon } from "./navigation/PathRibbon";
+import { CarBeaconMarker } from "./navigation/CarBeaconMarker";
+import { IndoorNavHUD } from "./navigation/IndoorNavHUD";
 
 type SlotStatus = "free" | "occupied";
 type SlotType = "normal" | "ev" | "vip" | "handicap";
@@ -2217,6 +2226,21 @@ const ParkingSceneLegacy = ({
         onSlotSelect={onSlotSelect}
       />
 
+      {isNavActive && pathResult && targetSlotPos && (
+        <group>
+          <PathRibbon
+            curve={pathResult.curve}
+            progress={walkProgress || 0}
+            isWalking={Boolean(isWalking)}
+          />
+          <CarBeaconMarker
+            position={targetSlotPos}
+            slotCode={targetSlotCode || ""}
+            isFlashing={isFlashing}
+          />
+        </group>
+      )}
+
       {!isIndoor && (
         <>
 
@@ -2310,6 +2334,13 @@ const ParkingScene = ({
   nightMode,
   profile,
   onSlotSelect,
+  isNavActive,
+  pathResult,
+  walkProgress,
+  isWalking,
+  targetSlotPos,
+  targetSlotCode,
+  isFlashing,
 }: {
   parkingLot: ParkingLot;
   slots: ParkingSlotModel[];
@@ -2317,6 +2348,13 @@ const ParkingScene = ({
   nightMode: boolean;
   profile: ParkingSceneProfile;
   onSlotSelect: (slotId: string) => void;
+  isNavActive?: boolean;
+  pathResult?: PathNavigationResult | null;
+  walkProgress?: number;
+  isWalking?: boolean;
+  targetSlotPos?: [number, number, number];
+  targetSlotCode?: string;
+  isFlashing?: boolean;
 }) => {
   const columnCount = Math.max(1, Math.ceil(slots.length / 2));
   const lotSeed = getLotSeed(parkingLot.id);
@@ -2732,6 +2770,13 @@ const Parking3DView = ({
   const controlsRef = useRef<any>(null);
   const sceneProfile = useMemo(() => deriveParkingSceneProfile(parkingLot), [parkingLot]);
 
+  // --- INDOOR 3D CAR FINDER NAVIGATION STATE ---
+  const [isNavActive, setIsNavActive] = useState(false);
+  const [navTargetSlotId, setNavTargetSlotId] = useState<string | null>(null);
+  const [isWalking, setIsWalking] = useState(false);
+  const [walkProgress, setWalkProgress] = useState(0);
+  const [isFlashing, setIsFlashing] = useState(false);
+
   const slots = useMemo(() => {
     const actualTotal = Math.max(12, parkingLot.total_spots || 24);
     const total = getVisualSlotCount(parkingLot, sceneProfile.key);
@@ -2786,6 +2831,72 @@ const Parking3DView = ({
     }),
     [parkingLot.available_spots, parkingLot.total_spots, slots],
   );
+
+  const columnCount = Math.max(1, Math.ceil(slots.length / 2));
+  const slotSpacingX = 4.25;
+  const bankOffset = 10.4;
+  const laneWidth = 8.8;
+  const deckWidth = Math.max(64, columnCount * slotSpacingX + 20);
+  const lotDepth = bankOffset * 2 + laneWidth + 22;
+  const landmarks = useMemo(() => getIndoorLandmarks(deckWidth, lotDepth), [deckWidth, lotDepth]);
+  const [activeLandmark, setActiveLandmark] = useState<IndoorLandmark>(landmarks[0]);
+
+  const targetSlot = useMemo(() => {
+    if (navTargetSlotId) {
+      const found = slots.find((s) => s.id === navTargetSlotId);
+      if (found) return found;
+    }
+    return slots.find((s) => s.status === "occupied") || slots[0];
+  }, [slots, navTargetSlotId]);
+
+  const slotOriginX = -((columnCount - 1) * slotSpacingX) / 2;
+  const topBankZ = -bankOffset;
+  const bottomBankZ = bankOffset;
+
+  const targetSlotPos = useMemo<[number, number, number]>(() => {
+    if (!targetSlot) return [0, 0, 0];
+    return [
+      slotOriginX + targetSlot.column * slotSpacingX,
+      0,
+      targetSlot.row === 0 ? topBankZ : bottomBankZ,
+    ];
+  }, [targetSlot, slotOriginX, slotSpacingX, topBankZ, bottomBankZ]);
+
+  const pathResult = useMemo(() => {
+    if (!targetSlot || !activeLandmark) return null;
+    return calculateIndoorPath(
+      activeLandmark.position,
+      targetSlotPos,
+      targetSlot.row,
+      targetSlot.code,
+      activeLandmark.name,
+      0
+    );
+  }, [activeLandmark, targetSlot, targetSlotPos]);
+
+  useEffect(() => {
+    if (!isWalking) return;
+    let animId: number;
+    let lastTime = performance.now();
+
+    const loop = (now: number) => {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      setWalkProgress((prev) => {
+        const next = prev + dt * 0.08;
+        if (next >= 1) {
+          setIsWalking(false);
+          toast.success(`Đã tới ô xe ${targetSlot?.code}!`);
+          return 1;
+        }
+        return next;
+      });
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animId);
+  }, [isWalking, targetSlot]);
 
   const cameraPresets = useMemo(() => {
     const columnCount = Math.ceil(slots.length / 2);
@@ -3014,6 +3125,33 @@ const Parking3DView = ({
           </Button>
         </div>
         <Button
+          variant={isNavActive ? "default" : "outline"}
+          size="sm"
+          className={cn(
+            "shadow-lg backdrop-blur-xl font-bold transition-all",
+            isNavActive
+              ? "border-cyan-400 bg-cyan-600 text-white shadow-cyan-500/40 hover:bg-cyan-500"
+              : "border-cyan-500/30 bg-slate-900/90 text-cyan-300 hover:bg-slate-900 hover:text-cyan-200"
+          )}
+          onClick={() => {
+            if (!isNavActive) {
+              const firstTarget = slots.find((s) => s.status === "occupied") || slots[0];
+              if (firstTarget) {
+                setNavTargetSlotId(firstTarget.id);
+                setIsNavActive(true);
+                setWalkProgress(0);
+                setIsWalking(false);
+              }
+            } else {
+              setIsNavActive(false);
+              setIsWalking(false);
+            }
+          }}
+        >
+          <Navigation className="mr-1 h-4 w-4" />
+          {isNavActive ? "Tắt Tìm Xe" : "Tìm Xe 3D"}
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           className="border-white/60 bg-white/92 shadow-lg backdrop-blur-xl hover:bg-white"
@@ -3054,6 +3192,13 @@ const Parking3DView = ({
           selectedSlot={selectedSlot}
           nightMode={isNightMode}
           profile={sceneProfile}
+          isNavActive={isNavActive}
+          pathResult={pathResult}
+          walkProgress={walkProgress}
+          isWalking={isWalking}
+          targetSlotPos={targetSlotPos}
+          targetSlotCode={targetSlot?.code}
+          isFlashing={isFlashing}
           onSlotSelect={(slotId) => {
             setSelectedSlot(slotId);
             onBook(slotId);
@@ -3082,6 +3227,35 @@ const Parking3DView = ({
           makeDefault
         />
       </Canvas>
+
+      {isNavActive && pathResult && targetSlot && (
+        <IndoorNavHUD
+          landmarks={landmarks}
+          activeLandmark={activeLandmark}
+          onSelectLandmark={(lm) => {
+            setActiveLandmark(lm);
+            setWalkProgress(0);
+          }}
+          targetSlotCode={targetSlot.code}
+          targetPlateNumber="30F-888.88"
+          pathResult={pathResult}
+          isWalking={isWalking}
+          onToggleWalking={() => setIsWalking(!isWalking)}
+          onTriggerHonk={() => {
+            setIsFlashing(true);
+            setTimeout(() => setIsFlashing(false), 1600);
+          }}
+          onResetCamera={() => {
+            setCameraMode("arrival");
+            setCameraResetToken((v) => v + 1);
+          }}
+          onClose={() => {
+            setIsNavActive(false);
+            setIsWalking(false);
+            setWalkProgress(0);
+          }}
+        />
+      )}
     </div>
   );
 };
