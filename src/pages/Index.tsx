@@ -1,4 +1,5 @@
 import React from 'react';
+import Header from '@/components/layout/Header';
 import { HeroSection } from '@/components/home/HeroSection';
 import { PopularLocationsSection } from '@/components/home/PopularLocationsSection';
 import { CarFinderSpotlight } from '@/components/home/CarFinderSpotlight';
@@ -9,7 +10,8 @@ import { Footer } from '@/components/home/Footer';
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-[#070709] text-white selection:bg-[#c9b586] selection:text-black">
+    <div className="min-h-screen bg-[#faf9f6] text-slate-900 selection:bg-blue-600 selection:text-white">
+      <Header />
       <HeroSection />
       <PopularLocationsSection />
       <CarFinderSpotlight />

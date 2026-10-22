@@ -34,36 +34,36 @@ export function DriverBenefitsSection() {
   ];
 
   return (
-    <section className="py-24 bg-[#070709] text-white border-t border-white/5 relative">
+    <section className="py-20 bg-[#faf9f6] text-slate-900 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="text-xs font-semibold text-[#c9b586] tracking-[0.25em] uppercase mb-2">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="text-xs font-bold text-blue-700 tracking-wider uppercase mb-1.5">
             LỢI ÍCH THỰC TẾ
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white">
-            Giải Quyết Triệt Để Nỗi Lo Khi Gửi Xe
+          <h2 className="font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+            Giải Quyết Triệt Để 4 Nỗi Lo Khi Gửi Xe
           </h2>
-          <p className="text-slate-400 text-sm md:text-base mt-2 font-light">
-            Những khó khăn thực tế mà mọi tài xế xe ô tô và xe máy tại Việt Nam đều từng gặp phải.
+          <p className="text-slate-600 text-sm sm:text-base mt-2 font-normal">
+            Những khó khăn thực tế mà mọi tài xế ô tô và xe máy tại Việt Nam đều từng gặp phải.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {benefits.map((b, idx) => (
             <div
               key={idx}
-              className="p-8 rounded-3xl bg-[#121217] border border-white/10 hover:border-[#c9b586]/40 transition-all duration-300"
+              className="p-7 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-serif text-2xl text-[#c9b586]/60 font-light">{b.num}</span>
-                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#c9b586]/10 text-[#c9b586] border border-[#c9b586]/20">
+              <div className="flex items-center justify-between mb-3.5">
+                <span className="font-sans text-xl font-extrabold text-blue-200">{b.num}</span>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
                   {b.badge}
                 </span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-normal text-white mb-3">
+              <h3 className="font-sans text-xl font-bold text-slate-900 mb-2">
                 {b.title}
               </h3>
-              <p className="text-slate-300 text-sm font-light leading-relaxed">
+              <p className="text-slate-600 text-sm leading-relaxed font-normal">
                 {b.desc}
               </p>
             </div>
