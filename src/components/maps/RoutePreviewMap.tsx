@@ -150,6 +150,19 @@ const RoutePreviewMap = ({
           attributionControl: true,
         });
 
+        // Always attach high-reliability OpenStreetMap Humanitarian tiles (Clean, free, crisp Vietnamese roads & landmarks, NO watermark)
+        leaflet
+          .tileLayer("https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png", {
+            subdomains: ["a", "b", "c"],
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          })
+          .addTo(map);
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 120);
+
         let routeCoordinates = buildFallbackRouteShape(origin, destination);
         let preview = buildFallbackRoutePreview(origin, destination);
         let usedFallback = true;
@@ -159,6 +172,7 @@ const RoutePreviewMap = ({
           routeCoordinates = route.coordinates;
           preview = buildOpenStreetMapRoutePreview(origin, destination, route);
           usedFallback = false;
+          setProviderLabel("OpenStreetMap Route");
         } catch {
           setProviderLabel("SpotAce Local Route");
         }
@@ -166,18 +180,6 @@ const RoutePreviewMap = ({
         if (cancelled) {
           map.remove();
           return;
-        }
-
-        if (!usedFallback) {
-          setProviderLabel("OpenStreetMap Route");
-          leaflet
-            .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-              attribution: "&copy; OpenStreetMap contributors",
-            })
-            .addTo(map);
-        } else if (mapRef.current) {
-          mapRef.current.style.background =
-            "linear-gradient(135deg, rgba(219,234,254,0.95), rgba(226,232,240,0.95), rgba(199,210,254,0.9))";
         }
 
         const polyline = leaflet.polyline(

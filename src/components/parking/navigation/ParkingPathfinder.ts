@@ -26,21 +26,21 @@ export function getIndoorLandmarks(deckWidth: number, lotDepth: number): IndoorL
       name: "Thang Máy Sảnh A (Khu Tây)",
       description: "Cửa Thang Máy TTTM Vincom • Lối Lên Siêu Thị & Rạp Phim",
       zone: "Khu Tây - Sảnh B2 Tháp A",
-      position: [-halfW + 2.5, 0, -1.8],
+      position: [-halfW + 6.0, 0, 0],
     },
     {
       id: "elevator_b",
       name: "Thang Máy Sảnh B (Khu Đông)",
       description: "Cửa Thang Máy TTTM Vincom • Lối Lên Khu Ẩm Thực & Thời Trang",
       zone: "Khu Đông - Sảnh B2 Tháp B",
-      position: [halfW - 2.5, 0, 1.8],
+      position: [halfW - 6.0, 0, 0],
     },
     {
       id: "main_entrance",
       name: "Lối Đi Bộ Cổng Hầm",
       description: "Cạnh bốt kiểm soát vé barrier vào hầm đường Lê Thánh Tôn",
       zone: "Cổng Chính Hầm B2",
-      position: [-halfW + 3.2, 0, 0],
+      position: [-halfW + 8.5, 0, 0],
     },
   ];
 }

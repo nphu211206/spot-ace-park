@@ -137,21 +137,21 @@ const PARKING_SCENE_PROFILES: Record<ParkingSceneProfileKey, ParkingSceneProfile
   mall_indoor: {
     key: "mall_indoor",
     label: "Mall Indoor Twin",
-    surfaceLabel: "Indoor Mall Profile",
+    surfaceLabel: "Tầng Hầm B2 Mega Mall",
     roofStyle: "interior",
     accentColor: "#1d4ed8",
-    backgroundDay: "#cfd8e2",
-    backgroundNight: "#0f172a",
-    fogDay: "#d7dee7",
-    fogNight: "#0f172a",
-    deckDay: "#737b86",
-    deckNight: "#334155",
-    laneDay: "#66707d",
-    laneNight: "#243244",
+    backgroundDay: "#0f172a",
+    backgroundNight: "#091221",
+    fogDay: "#1e293b",
+    fogNight: "#091221",
+    deckDay: "#334155",
+    deckNight: "#1e293b",
+    laneDay: "#1e293b",
+    laneNight: "#0f172a",
     showSky: false,
     showPlanters: false,
     showPerimeterBuildings: false,
-    shellHeight: 7.3,
+    shellHeight: 5.5,
     environmentDay: "warehouse",
     environmentNight: "warehouse",
   },
@@ -253,15 +253,15 @@ const getSlotAccent = (slotType: SlotType, status: SlotStatus, isSelected: boole
 
 const deriveParkingSceneProfile = (parkingLot: ParkingLot): ParkingSceneProfile => {
   void parkingLot;
-  return PARKING_SCENE_PROFILES.open_air_surface;
+  return PARKING_SCENE_PROFILES.mall_indoor;
 };
 
 const getVisualSlotCount = (parkingLot: ParkingLot, profileKey: ParkingSceneProfileKey) => {
-  const actualTotal = Math.max(12, parkingLot.total_spots || 24);
+  const actualTotal = Math.max(48, parkingLot.total_spots || 56);
   const profileCap =
-    profileKey === "mall_indoor" ? 24 : profileKey === "tower_podium" ? 26 : 30;
+    profileKey === "mall_indoor" ? 56 : profileKey === "tower_podium" ? 52 : 48;
 
-  return clamp(actualTotal, 16, profileCap);
+  return clamp(actualTotal, 44, profileCap);
 };
 
 const getVehicleVariant = (index: number, lotSeed: number, slotType: SlotType): ParkingVehicleVariant => {
@@ -2458,7 +2458,7 @@ const ParkingScene = ({
       <VietnamBasementContext
         width={deckWidth + 14}
         depth={lotDepth + 8}
-        height={4.2}
+        height={4.8}
         laneWidth={laneWidth}
         lotName={parkingLot.name}
         columnCount={columnCount}
@@ -2632,6 +2632,9 @@ const ParkingCameraController = ({
   preset,
   controlsRef,
   resetToken,
+  deckWidth = 145,
+  lotDepth = 60,
+  basementHeight = 4.8,
 }: {
   preset: {
     position: [number, number, number];
@@ -2645,8 +2648,12 @@ const ParkingCameraController = ({
   };
   controlsRef: React.RefObject<any>;
   resetToken: number;
+  deckWidth?: number;
+  lotDepth?: number;
+  basementHeight?: number;
 }) => {
   const { camera } = useThree();
+
   useEffect(() => {
     camera.fov = preset.fov;
     camera.position.set(...preset.position);
@@ -2675,6 +2682,25 @@ const ParkingCameraController = ({
       controlsRef.current.update();
     }
   }, [camera, controlsRef, resetToken, preset]);
+
+  // Rigidly lock camera inside the indoor basement so it can NEVER pop above roof or outside walls
+  useFrame(() => {
+    const minY = 1.15;
+    const maxY = basementHeight - 0.45;
+    camera.position.y = THREE.MathUtils.clamp(camera.position.y, minY, maxY);
+
+    const halfW = deckWidth / 2;
+    const halfD = lotDepth / 2;
+    const margin = 2.6;
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -halfW + margin, halfW - margin);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -halfD + margin, halfD - margin);
+
+    if (controlsRef.current) {
+      controlsRef.current.target.y = THREE.MathUtils.clamp(controlsRef.current.target.y, 0.8, 2.2);
+      controlsRef.current.target.x = THREE.MathUtils.clamp(controlsRef.current.target.x, -halfW + margin + 1, halfW - margin - 1);
+      controlsRef.current.target.z = THREE.MathUtils.clamp(controlsRef.current.target.z, -halfD + margin + 1, halfD - margin - 1);
+    }
+  });
 
   return null;
 };
@@ -2760,10 +2786,11 @@ const Parking3DView = ({
 
   const columnCount = Math.max(1, Math.ceil(slots.length / 2));
   const slotSpacingX = 4.25;
-  const bankOffset = 10.4;
-  const laneWidth = 8.8;
-  const deckWidth = Math.max(64, columnCount * slotSpacingX + 20);
-  const lotDepth = bankOffset * 2 + laneWidth + 22;
+  const bankOffset = 11.2;
+  const laneWidth = 10.0;
+  const deckWidth = Math.max(142, columnCount * slotSpacingX + 26);
+  const lotDepth = bankOffset * 2 + laneWidth + 28;
+  const basementHeight = 4.8;
   const landmarks = useMemo(() => getIndoorLandmarks(deckWidth, lotDepth), [deckWidth, lotDepth]);
   const [activeLandmark, setActiveLandmark] = useState<IndoorLandmark>(landmarks[0]);
 
@@ -2839,46 +2866,46 @@ const Parking3DView = ({
     let arrivalTarget: [number, number, number];
 
     if (isNavActive && activeLandmark) {
-      // 3rd-person follow cam behind the 3D human walker at the elevator foyer
+      const isEast = activeLandmark.id === "elevator_b";
+      const sign = isEast ? -1 : 1;
       arrivalPosition = [
-        activeLandmark.position[0] - 4.2,
-        2.05,
-        activeLandmark.position[2] + 2.2,
+        activeLandmark.position[0] - sign * 3.8,
+        2.1,
+        activeLandmark.position[2] + 2.5,
       ];
       arrivalTarget = [
-        activeLandmark.position[0] + 1.2,
+        activeLandmark.position[0] + sign * 14.0,
         1.35,
-        activeLandmark.position[2],
+        0,
       ];
     } else {
-      // Driver eye-level perspective inside the enclosed Vietnamese basement looking down the main driveway lane
       arrivalPosition = [
-        -deckWidth / 2 + 7.5,
-        2.2,
-        5.2,
+        -deckWidth / 2 + 10.0,
+        2.1,
+        4.8,
       ];
-      arrivalTarget = [0, 1.2, 0];
+      arrivalTarget = [0, 1.3, 0];
     }
 
     return {
       arrival: {
         position: arrivalPosition,
-        fov: isNavActive ? 56 : 64,
-        minDistance: 1.5,
-        maxDistance: 80,
+        fov: isNavActive ? 58 : 68,
+        minDistance: 1.8,
+        maxDistance: 26,
         target: arrivalTarget as [number, number, number],
-        minPolarAngle: 0.1,
-        maxPolarAngle: 2.2,
+        minPolarAngle: Math.PI / 2 - 0.28,
+        maxPolarAngle: Math.PI / 2 + 0.22,
         maxAzimuthAngle: Math.PI * 2,
       },
       booking: {
         position: arrivalPosition,
-        fov: 52,
-        minDistance: 2,
-        maxDistance: 80,
-        target: [0, 1.2, 0] as [number, number, number],
-        minPolarAngle: 0.1,
-        maxPolarAngle: 2.2,
+        fov: 56,
+        minDistance: 1.8,
+        maxDistance: 26,
+        target: [0, 1.3, 0] as [number, number, number],
+        minPolarAngle: Math.PI / 2 - 0.28,
+        maxPolarAngle: Math.PI / 2 + 0.22,
         maxAzimuthAngle: Math.PI * 2,
       },
     };
@@ -3143,7 +3170,14 @@ const Parking3DView = ({
       </div>
 
       <Canvas shadows dpr={[1, 1.8]} camera={canvasCamera}>
-        <ParkingCameraController preset={cameraPresets[cameraMode]} controlsRef={controlsRef} resetToken={cameraResetToken} />
+        <ParkingCameraController
+          preset={cameraPresets[cameraMode]}
+          controlsRef={controlsRef}
+          resetToken={cameraResetToken}
+          deckWidth={deckWidth}
+          lotDepth={lotDepth}
+          basementHeight={4.8}
+        />
         <ParkingScene
           parkingLot={parkingLot}
           slots={slots}
@@ -3169,9 +3203,13 @@ const Parking3DView = ({
           enableRotate
           enableDamping
           dampingFactor={0.08}
-          rotateSpeed={1.18}
+          rotateSpeed={1.05}
           zoomSpeed={0.95}
-          panSpeed={1}
+          panSpeed={0.9}
+          minDistance={1.8}
+          maxDistance={26}
+          minPolarAngle={Math.PI / 2 - 0.28}
+          maxPolarAngle={Math.PI / 2 + 0.22}
           screenSpacePanning={false}
           mouseButtons={{
             LEFT: THREE.MOUSE.ROTATE,

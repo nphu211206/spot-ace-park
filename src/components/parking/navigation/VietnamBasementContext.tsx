@@ -17,7 +17,7 @@ interface VietnamBasementProps {
 export function VietnamBasementContext({
   width,
   depth,
-  height = 4.1,
+  height = 4.8,
   laneWidth = 8.8,
   lotName = "Vincom Center Đồng Khởi",
   columnCount = 12,
@@ -53,10 +53,10 @@ export function VietnamBasementContext({
       {/* ============================================================== */}
       {/* 1. ENCLOSED BASEMENT CEILING & STRUCTURAL BEAMS               */}
       {/* ============================================================== */}
-      {/* Main Concrete Ceiling Slab */}
+      {/* Main Concrete Ceiling Slab with DoubleSide rendering */}
       <mesh position={[0, height + 0.15, 0]} receiveShadow>
-        <boxGeometry args={[width + 12, 0.3, depth + 12]} />
-        <meshStandardMaterial color="#475569" roughness={0.82} />
+        <boxGeometry args={[width + 16, 0.3, depth + 16]} />
+        <meshStandardMaterial color="#334155" roughness={0.82} side={THREE.DoubleSide} />
       </mesh>
 
       {/* Heavy Structural Concrete Beams running across ceiling */}
@@ -411,6 +411,72 @@ export function VietnamBasementContext({
           ĐƯỜNG LÊ THÁNH TÔN • CHIỀU CAO 2.2M
         </Text>
       </group>
+
+      {/* Elevator Lobby Structure at East End (Sảnh B - Tháp Lê Thánh Tôn) */}
+      <group position={[halfW - 1.2, 0, 0]}>
+        <mesh position={[0, height / 2, 0]} receiveShadow>
+          <boxGeometry args={[1.4, height, 9.2]} />
+          <meshStandardMaterial color="#334155" roughness={0.25} metalness={0.35} />
+        </mesh>
+        <group position={[-0.72, 1.2, -1.8]}>
+          <mesh>
+            <boxGeometry args={[0.06, 2.4, 1.6]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.96} roughness={0.08} />
+          </mesh>
+          <mesh position={[-0.04, 1.45, 0]}>
+            <boxGeometry args={[0.02, 0.28, 0.6]} />
+            <meshBasicMaterial color="#000000" />
+          </mesh>
+          <Text position={[-0.06, 1.45, 0]} rotation={[0, -Math.PI / 2, 0]} fontSize={0.22} color="#22c55e">
+            B2 ▲
+          </Text>
+        </group>
+        <group position={[-0.72, 1.2, 1.8]}>
+          <mesh>
+            <boxGeometry args={[0.06, 2.4, 1.6]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.96} roughness={0.08} />
+          </mesh>
+          <mesh position={[-0.04, 1.45, 0]}>
+            <boxGeometry args={[0.02, 0.28, 0.6]} />
+            <meshBasicMaterial color="#000000" />
+          </mesh>
+          <Text position={[-0.06, 1.45, 0]} rotation={[0, -Math.PI / 2, 0]} fontSize={0.22} color="#3b82f6">
+            B2 ▼
+          </Text>
+        </group>
+        <group position={[-1.8, height - 1.1, 0]} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh>
+            <boxGeometry args={[4.2, 0.75, 0.1]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.2} emissive="#0f172a" emissiveIntensity={0.3} />
+          </mesh>
+          <Text position={[0, 0.08, 0.06]} fontSize={0.26} color="#38bdf8" anchorX="center" anchorY="middle">
+            THANG MÁY TTTM • SẢNH B (KHU ĐÔNG)
+          </Text>
+          <Text position={[0, -0.2, 0.06]} fontSize={0.18} color="#94a3b8" anchorX="center" anchorY="middle">
+            LỐI LÊN KHU ẨM THỰC & RẠP CHIẾU PHIM ⬆
+          </Text>
+        </group>
+      </group>
+
+      {/* Overhead Directional Lightboxes along the 145m driveway */}
+      {[-halfW * 0.45, 0, halfW * 0.45].map((boxX, bIdx) => (
+        <group key={`dir-lightbox-${bIdx}`} position={[boxX, height - 1.1, 0]}>
+          <mesh>
+            <boxGeometry args={[3.8, 0.65, 0.12]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.25} emissive="#1e293b" emissiveIntensity={0.4} />
+          </mesh>
+          <Text position={[0, 0.08, 0.07]} fontSize={0.22} color="#38bdf8" anchorX="center" anchorY="middle">
+            {bIdx === 0
+              ? "← SẢNH A (THÁP ĐỒNG KHỞI) | KHU B (Ô 15 - 28) →"
+              : bIdx === 1
+              ? "TẦNG HẦM B2 • VINCOM CENTER ĐỒNG KHỞI • 5 KM/H"
+              : "← KHU SẠC XE ĐIỆN EV | SẢNH B (RẠP PHIM CGV) →"}
+          </Text>
+          <Text position={[0, -0.16, 0.07]} fontSize={0.16} color="#cbd5e1" anchorX="center" anchorY="middle">
+            HỆ THỐNG ĐỖ XE THÔNG MINH SPOT-ACE AI 3D
+          </Text>
+        </group>
+      ))}
 
       {/* Speed Bump / Gờ giảm tốc across central drive lane */}
       {[-halfW + 12, 0, halfW - 12].map((bumpX, bIdx) => (
