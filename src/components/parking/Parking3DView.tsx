@@ -833,8 +833,8 @@ const ParkingSlot = ({
   const displayCode = slot.code;
   const accentColor = getSlotAccent(slot.type, slot.status, isSelected);
   const stripeColor = isSelected ? PALETTE.selected : slot.type === "normal" ? "#f8fafc" : accentColor;
-  const slotFill = isSelected ? "#8ea0b6" : slot.status === "occupied" ? "#8996a3" : "#94a2af";
-  const slotDeck = slot.status === "occupied" ? "#5f6b77" : "#677484";
+  const slotFill = isSelected ? "#38bdf8" : slot.status === "occupied" ? "#64748b" : "#475569";
+  const slotDeck = slot.status === "occupied" ? "#475569" : "#3b4858";
   const showAction = (hovered || isSelected) && slot.status === "free";
   const vehicleVariant = getVehicleVariant(index, lotSeed, slot.type);
   const vehicleColor = getVehicleColor(index, lotSeed, slot.type);
@@ -2387,20 +2387,23 @@ const ParkingScene = ({
 
   return (
     <>
-      {/* Dark Enclosed Basement Atmosphere */}
-      <color attach="background" args={["#0c1017"]} />
-      <fog attach="fog" args={["#0c1017", 18, 95]} />
-      <ambientLight intensity={nightMode ? 0.55 : 0.82} color="#f8fafc" />
-      <pointLight position={[0, 3.8, 0]} intensity={1.6} color="#e2e8f0" distance={65} />
+      {/* Bright, Modern Grade-A Commercial Basement Atmosphere */}
+      <color attach="background" args={["#1e2634"]} />
+      <ambientLight intensity={nightMode ? 1.35 : 1.95} color="#ffffff" />
+      <hemisphereLight skyColor="#ffffff" groundColor="#475569" intensity={nightMode ? 0.85 : 1.45} />
       <directionalLight
-        position={[0, 3.9, 0]}
-        intensity={nightMode ? 0.4 : 0.9}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        position={[18, 4.0, 10]}
+        intensity={nightMode ? 0.9 : 1.55}
+        color="#ffffff"
       />
+      <directionalLight
+        position={[-18, 4.0, -10]}
+        intensity={nightMode ? 0.9 : 1.55}
+        color="#ffffff"
+      />
+      <pointLight position={[0, 3.88, 0]} intensity={2.6} color="#ffffff" distance={85} decay={0.6} />
 
-      {/* Reflective Polished Epoxy Basement Floor */}
+      {/* High-Gloss Commercial Epoxy Basement Floor (Reflective Grey-Blue) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
         <planeGeometry args={[deckWidth + 24, lotDepth + 16]} />
         <MeshReflectorMaterial
@@ -2408,30 +2411,47 @@ const ParkingScene = ({
           blur={[300, 100]}
           resolution={512}
           mixBlur={0.82}
-          mixStrength={nightMode ? 8 : 4.5}
-          roughness={0.32}
+          mixStrength={nightMode ? 6 : 4.2}
+          roughness={0.22}
           depthScale={0.12}
           minDepthThreshold={0.8}
-          color={nightMode ? "#141a24" : "#1f2632"}
-          metalness={0.22}
-          mirror={0.08}
+          color={nightMode ? "#2a3648" : "#4a596d"}
+          metalness={0.28}
+          mirror={0.15}
         />
       </mesh>
 
-      {/* Driveway Central Lane Asphalt Surface */}
+      {/* Driveway Central Lane Clean Asphalt Surface */}
       <mesh position={[0, 0.06, laneCenterZ]} receiveShadow>
         <boxGeometry args={[deckWidth + 12, 0.08, laneWidth]} />
-        <meshStandardMaterial map={asphaltMap} color="#1c232c" roughness={0.7} />
+        <meshStandardMaterial map={asphaltMap} color="#334155" roughness={0.52} />
       </mesh>
 
-      {/* Parking Slot Banks Base */}
+      {/* Double Yellow Dashed Centerline Stripes along Central Driveway */}
+      {Array.from({ length: Math.max(8, Math.floor(deckWidth / 3.6)) }).map((_, i) => {
+        const x = -deckWidth / 2 + 3 + i * 3.6;
+        return (
+          <group key={`centerline-${i}`}>
+            <mesh position={[x, 0.103, -0.16]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[1.8, 0.14]} />
+              <meshBasicMaterial color="#facc15" />
+            </mesh>
+            <mesh position={[x, 0.103, 0.16]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[1.8, 0.14]} />
+              <meshBasicMaterial color="#facc15" />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* Parking Slot Banks Base (Clean Epoxy Deck) */}
       <mesh position={[0, 0.06, topBankZ]} receiveShadow>
         <boxGeometry args={[deckWidth + 12, 0.08, 6.8]} />
-        <meshStandardMaterial map={asphaltMap} color="#27303c" roughness={0.75} />
+        <meshStandardMaterial map={asphaltMap} color="#3e4d60" roughness={0.55} />
       </mesh>
       <mesh position={[0, 0.06, bottomBankZ]} receiveShadow>
         <boxGeometry args={[deckWidth + 12, 0.08, 6.8]} />
-        <meshStandardMaterial map={asphaltMap} color="#27303c" roughness={0.75} />
+        <meshStandardMaterial map={asphaltMap} color="#3e4d60" roughness={0.55} />
       </mesh>
 
       {/* Vietnamese Basement Architecture: Enclosed Ceiling, Red PCCC Sprinklers, HVAC Ducts, Concrete Columns B2-A01, Elevator Lobby */}

@@ -56,25 +56,25 @@ export function VietnamBasementContext({
       {/* Main Concrete Ceiling Slab */}
       <mesh position={[0, height + 0.15, 0]} receiveShadow>
         <boxGeometry args={[width + 12, 0.3, depth + 12]} />
-        <meshStandardMaterial color="#1a1e24" roughness={0.92} />
+        <meshStandardMaterial color="#475569" roughness={0.82} />
       </mesh>
 
       {/* Heavy Structural Concrete Beams running across ceiling */}
       {beamXList.map((x, idx) => (
         <mesh key={`beam-${idx}`} position={[x, height - 0.22, 0]} receiveShadow>
           <boxGeometry args={[0.7, 0.45, depth + 10]} />
-          <meshStandardMaterial color="#222831" roughness={0.88} />
+          <meshStandardMaterial color="#526071" roughness={0.78} />
         </mesh>
       ))}
 
       {/* Longitudinal Beam across the central lane boundary */}
       <mesh position={[0, height - 0.22, topBankZ + 3.2]} receiveShadow>
         <boxGeometry args={[width + 10, 0.45, 0.7]} />
-        <meshStandardMaterial color="#222831" roughness={0.88} />
+        <meshStandardMaterial color="#526071" roughness={0.78} />
       </mesh>
       <mesh position={[0, height - 0.22, bottomBankZ - 3.2]} receiveShadow>
         <boxGeometry args={[width + 10, 0.45, 0.7]} />
-        <meshStandardMaterial color="#222831" roughness={0.88} />
+        <meshStandardMaterial color="#526071" roughness={0.78} />
       </mesh>
 
       {/* ============================================================== */}
@@ -84,18 +84,18 @@ export function VietnamBasementContext({
       <mesh position={[0, height - 0.55, -1.8]}>
         <boxGeometry args={[width + 8, 0.42, 1.3]} />
         <meshStandardMaterial
-          color="#94a3b8"
-          metalness={0.65}
-          roughness={0.32}
+          color="#e2e8f0"
+          metalness={0.82}
+          roughness={0.22}
         />
       </mesh>
       {/* Return Air Duct */}
       <mesh position={[0, height - 0.55, 1.8]}>
         <boxGeometry args={[width + 8, 0.38, 1.0]} />
         <meshStandardMaterial
-          color="#94a3b8"
-          metalness={0.65}
-          roughness={0.32}
+          color="#e2e8f0"
+          metalness={0.82}
+          roughness={0.22}
         />
       </mesh>
 
@@ -105,18 +105,18 @@ export function VietnamBasementContext({
       {/* Main Red Fire Pipe running along driveway */}
       <mesh position={[0, height - 0.82, -3.2]}>
         <cylinderGeometry args={[0.075, 0.075, width + 8, 16]} rotation={[0, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#dc2626" metalness={0.4} roughness={0.3} />
+        <meshStandardMaterial color="#ef4444" metalness={0.4} roughness={0.3} />
       </mesh>
       <mesh position={[0, height - 0.82, 3.2]}>
         <cylinderGeometry args={[0.075, 0.075, width + 8, 16]} rotation={[0, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#dc2626" metalness={0.4} roughness={0.3} />
+        <meshStandardMaterial color="#ef4444" metalness={0.4} roughness={0.3} />
       </mesh>
       {/* Branch Sprinkler Pipes & Drops */}
       {beamXList.map((x, idx) => (
         <group key={`sprinkler-branch-${idx}`} position={[x, height - 0.9, 0]}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.035, 0.035, depth * 0.7, 12]} />
-            <meshStandardMaterial color="#dc2626" metalness={0.4} roughness={0.3} />
+            <meshStandardMaterial color="#ef4444" metalness={0.4} roughness={0.3} />
           </mesh>
           {/* Sprinkler heads dropping down */}
           {[-4.5, 0, 4.5].map((z, sIdx) => (
@@ -143,31 +143,39 @@ export function VietnamBasementContext({
       {/* ============================================================== */}
       {/* 5. CEILING FLUORESCENT LED LIGHT BARS                          */}
       {/* ============================================================== */}
+      {/* High-output Industrial Linear LED Fixtures across the basement */}
       {beamXList.map((x, idx) => (
         <group key={`led-strip-${idx}`}>
-          {/* Center Light */}
-          <group position={[x, height - 0.35, 0]}>
+          {/* Center Driveway Double LED Tube */}
+          <group position={[x, height - 0.32, 0]}>
             <mesh>
-              <boxGeometry args={[0.22, 0.08, 3.2]} />
-              <meshBasicMaterial color="#ffffff" />
+              <boxGeometry args={[0.32, 0.06, 3.8]} />
+              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={4.2} />
             </mesh>
-            <pointLight color="#f8fafc" intensity={1.8} distance={14} decay={1.8} />
+            {/* Wide fill lighting from every 2nd beam */}
+            {idx % 2 === 0 && (
+              <pointLight color="#ffffff" intensity={2.8} distance={38} decay={0.8} />
+            )}
           </group>
-          {/* North Bank Light */}
-          <group position={[x, height - 0.35, topBankZ + 2.5]}>
+          {/* North Parking Bank LED Tube */}
+          <group position={[x, height - 0.32, topBankZ + 2.8]}>
             <mesh>
-              <boxGeometry args={[0.22, 0.08, 2.8]} />
-              <meshBasicMaterial color="#ffffff" />
+              <boxGeometry args={[0.28, 0.06, 3.2]} />
+              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3.6} />
             </mesh>
-            <pointLight color="#f8fafc" intensity={1.2} distance={12} decay={1.8} />
+            {idx % 2 === 1 && (
+              <pointLight color="#f8fafc" intensity={2.2} distance={32} decay={0.8} />
+            )}
           </group>
-          {/* South Bank Light */}
-          <group position={[x, height - 0.35, bottomBankZ - 2.5]}>
+          {/* South Parking Bank LED Tube */}
+          <group position={[x, height - 0.32, bottomBankZ - 2.8]}>
             <mesh>
-              <boxGeometry args={[0.22, 0.08, 2.8]} />
-              <meshBasicMaterial color="#ffffff" />
+              <boxGeometry args={[0.28, 0.06, 3.2]} />
+              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3.6} />
             </mesh>
-            <pointLight color="#f8fafc" intensity={1.2} distance={12} decay={1.8} />
+            {idx % 2 === 1 && (
+              <pointLight color="#f8fafc" intensity={2.2} distance={32} decay={0.8} />
+            )}
           </group>
         </group>
       ))}
@@ -179,7 +187,7 @@ export function VietnamBasementContext({
       <group position={[0, height / 2, -halfD - 4.5]}>
         <mesh receiveShadow>
           <boxGeometry args={[width + 10, height, 0.6]} />
-          <meshStandardMaterial color="#2d3748" roughness={0.9} />
+          <meshStandardMaterial color="#64748b" roughness={0.75} />
         </mesh>
         {/* Yellow-Black reflective warning band at 1m height */}
         <mesh position={[0, -height / 2 + 1.1, 0.32]}>
@@ -202,7 +210,7 @@ export function VietnamBasementContext({
       <group position={[0, height / 2, halfD + 4.5]}>
         <mesh receiveShadow>
           <boxGeometry args={[width + 10, height, 0.6]} />
-          <meshStandardMaterial color="#2d3748" roughness={0.9} />
+          <meshStandardMaterial color="#64748b" roughness={0.75} />
         </mesh>
         <mesh position={[0, -height / 2 + 1.1, -0.32]}>
           <boxGeometry args={[width + 10, 0.28, 0.04]} />
@@ -214,7 +222,7 @@ export function VietnamBasementContext({
       <group position={[halfW + 4.5, height / 2, 0]}>
         <mesh receiveShadow>
           <boxGeometry args={[0.6, height, depth + 10]} />
-          <meshStandardMaterial color="#2d3748" roughness={0.9} />
+          <meshStandardMaterial color="#64748b" roughness={0.75} />
         </mesh>
         <mesh position={[-0.32, -height / 2 + 1.1, 0]}>
           <boxGeometry args={[0.04, 0.28, depth + 10]} />
@@ -226,7 +234,7 @@ export function VietnamBasementContext({
       <group position={[-halfW - 4.5, height / 2, 0]}>
         <mesh receiveShadow>
           <boxGeometry args={[0.6, height, depth + 10]} />
-          <meshStandardMaterial color="#2d3748" roughness={0.9} />
+          <meshStandardMaterial color="#64748b" roughness={0.75} />
         </mesh>
         <mesh position={[0.32, -height / 2 + 1.1, 0]}>
           <boxGeometry args={[0.04, 0.28, depth + 10]} />
@@ -248,17 +256,17 @@ export function VietnamBasementContext({
               {/* Column Concrete Shaft */}
               <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
                 <boxGeometry args={[0.82, height, 0.82]} />
-                <meshStandardMaterial color="#cbd5e1" roughness={0.88} />
+                <meshStandardMaterial color="#f1f5f9" roughness={0.7} />
               </mesh>
               {/* Yellow-Black Warning Stripes Base (0m to 1.1m) */}
               <mesh position={[0, 0.55, 0]}>
                 <boxGeometry args={[0.86, 1.1, 0.86]} />
-                <meshStandardMaterial color="#eab308" roughness={0.6} />
+                <meshStandardMaterial color="#facc15" roughness={0.4} />
               </mesh>
               {/* Blue Zone Identification Band (1.6m to 2.5m) */}
               <mesh position={[0, 2.05, 0]}>
                 <boxGeometry args={[0.85, 0.9, 0.85]} />
-                <meshStandardMaterial color="#1d4ed8" roughness={0.5} />
+                <meshStandardMaterial color="#2563eb" roughness={0.5} />
               </mesh>
               {/* Column Code Badge on Front and Back */}
               <Text
@@ -299,15 +307,15 @@ export function VietnamBasementContext({
             <group position={[colX, 0, bottomBankZ - 3.8]}>
               <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
                 <boxGeometry args={[0.82, height, 0.82]} />
-                <meshStandardMaterial color="#cbd5e1" roughness={0.88} />
+                <meshStandardMaterial color="#f1f5f9" roughness={0.7} />
               </mesh>
               <mesh position={[0, 0.55, 0]}>
                 <boxGeometry args={[0.86, 1.1, 0.86]} />
-                <meshStandardMaterial color="#eab308" roughness={0.6} />
+                <meshStandardMaterial color="#facc15" roughness={0.4} />
               </mesh>
               <mesh position={[0, 2.05, 0]}>
                 <boxGeometry args={[0.85, 0.9, 0.85]} />
-                <meshStandardMaterial color="#d97706" roughness={0.5} />
+                <meshStandardMaterial color="#f59e0b" roughness={0.5} />
               </mesh>
               <Text
                 position={[0, 2.05, -0.44]}
@@ -341,13 +349,13 @@ export function VietnamBasementContext({
         {/* Granite Wall Façade */}
         <mesh position={[0, height / 2, 0]} receiveShadow>
           <boxGeometry args={[1.4, height, 9.2]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.2} />
+          <meshStandardMaterial color="#334155" roughness={0.25} metalness={0.35} />
         </mesh>
         {/* Stainless Steel Elevator Doors (Double Door) */}
         <group position={[0.72, 1.2, -1.8]}>
           <mesh>
             <boxGeometry args={[0.06, 2.4, 1.6]} />
-            <meshStandardMaterial color="#e2e8f0" metalness={0.92} roughness={0.12} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.96} roughness={0.08} />
           </mesh>
           {/* LED Floor Indicator (B2) */}
           <mesh position={[0.04, 1.45, 0]}>
@@ -362,7 +370,7 @@ export function VietnamBasementContext({
         <group position={[0.72, 1.2, 1.8]}>
           <mesh>
             <boxGeometry args={[0.06, 2.4, 1.6]} />
-            <meshStandardMaterial color="#e2e8f0" metalness={0.92} roughness={0.12} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.96} roughness={0.08} />
           </mesh>
           <mesh position={[0.04, 1.45, 0]}>
             <boxGeometry args={[0.02, 0.28, 0.6]} />
@@ -376,7 +384,7 @@ export function VietnamBasementContext({
         <group position={[1.8, height - 1.1, 0]} rotation={[0, Math.PI / 2, 0]}>
           <mesh>
             <boxGeometry args={[4.2, 0.75, 0.1]} />
-            <meshStandardMaterial color="#0f172a" roughness={0.2} />
+            <meshStandardMaterial color="#1e293b" roughness={0.2} emissive="#0f172a" emissiveIntensity={0.3} />
           </mesh>
           <Text position={[0, 0.08, 0.06]} fontSize={0.26} color="#38bdf8" anchorX="center" anchorY="middle">
             THANG MÁY TTTM • SẢNH A (KHU TÂY)
@@ -394,7 +402,7 @@ export function VietnamBasementContext({
       <group position={[halfW - 5.5, height - 1.1, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <mesh>
           <boxGeometry args={[3.2, 0.65, 0.08]} />
-          <meshStandardMaterial color="#0f172a" roughness={0.2} />
+          <meshStandardMaterial color="#1e293b" roughness={0.2} emissive="#0f172a" emissiveIntensity={0.3} />
         </mesh>
         <Text position={[0, 0.06, 0.05]} fontSize={0.26} color="#22c55e" anchorX="center" anchorY="middle">
           LỐI RA XE HƠI / EXIT ↗

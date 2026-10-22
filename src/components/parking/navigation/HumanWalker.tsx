@@ -1,7 +1,7 @@
 import { safeGetPointAt } from "./ParkingPathfinder";
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useAnimations, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 interface HumanWalkerProps {
@@ -20,6 +20,38 @@ export function HumanWalker({
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/ren.glb");
   const { actions } = useAnimations(animations, groupRef);
+
+  // Override dull terracotta clay materials into sleek, bright modern athletic attire
+  useEffect(() => {
+    if (!scene) return;
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        if (mesh.material) {
+          const mat = mesh.material as any;
+          if (mesh.name === "Mesh" || mat.name?.includes("Joints")) {
+            // Sleek sporty blue accent trim
+            mesh.material = new THREE.MeshStandardMaterial({
+              color: "#0284c7",
+              roughness: 0.25,
+              metalness: 0.45,
+              emissive: "#0369a1",
+              emissiveIntensity: 0.35,
+            });
+          } else {
+            // Clean, crisp white & light silver athletic track jacket & joggers
+            mesh.material = new THREE.MeshStandardMaterial({
+              color: "#f8fafc",
+              roughness: 0.32,
+              metalness: 0.12,
+            });
+          }
+        }
+      }
+    });
+  }, [scene]);
 
   // Switch animation between 'idle' and 'walk'
   useEffect(() => {
@@ -70,25 +102,39 @@ export function HumanWalker({
   return (
     <group ref={groupRef}>
       {/* 3D Human Model */}
-      <primitive object={scene} scale={1.0} dispose={null} />
+      <primitive object={scene} scale={1.05} dispose={null} />
 
-      {/* Floating Holographic Marker above head */}
-      <mesh position={[0, 2.3, 0]}>
-        <coneGeometry args={[0.18, 0.38, 16]} />
+      {/* Dedicated Follow Key Light: ensures character is always vividly illuminated */}
+      <pointLight position={[0, 2.4, 1.2]} intensity={4.5} color="#ffffff" distance={8} decay={0.8} />
+      <pointLight position={[0, 1.2, -1.0]} intensity={2.5} color="#f8fafc" distance={6} decay={0.8} />
+
+      {/* Floating Holographic Marker & HTML Name Badge above head */}
+      <mesh position={[0, 2.25, 0]}>
+        <coneGeometry args={[0.14, 0.3, 16]} />
         <meshStandardMaterial
-          color="#06b6d4"
+          color="#00f0ff"
           emissive="#00f0ff"
-          emissiveIntensity={0.8}
+          emissiveIntensity={1.2}
         />
       </mesh>
 
-      {/* Ground Position Indicator Ring */}
+      <Html position={[0, 2.48, 0]} center distanceFactor={14} style={{ pointerEvents: "none" }}>
+        <div className="flex items-center gap-1.5 rounded-full border border-cyan-400/90 bg-slate-900/95 px-3 py-1 shadow-2xl backdrop-blur-md whitespace-nowrap">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+          </span>
+          <span className="text-[11px] font-black tracking-wider text-cyan-300">VỊ TRÍ CỦA BẠN</span>
+        </div>
+      </Html>
+
+      {/* Bright Ground Radar Indicator Ring */}
       <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.25, 0.75, 32]} />
+        <ringGeometry args={[0.3, 0.85, 32]} />
         <meshBasicMaterial
           color="#00f0ff"
           transparent
-          opacity={0.65}
+          opacity={0.85}
           side={THREE.DoubleSide}
         />
       </mesh>
