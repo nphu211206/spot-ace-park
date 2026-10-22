@@ -1,6 +1,7 @@
-﻿import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { HumanWalker } from "./HumanWalker";
 
 interface PathRibbonProps {
   curve: THREE.CatmullRomCurve3;
@@ -12,46 +13,55 @@ interface PathRibbonProps {
 }
 
 /**
- * Creates an animated canvas texture with glowing neon directional arrows
+ * Creates an animated canvas texture with bold, glowing directional neon chevrons (>>>)
  * (Ported & adapted from smartPark-3D PathLine).
  */
-function createArrowTexture(baseColor = "#06b6d4"): THREE.CanvasTexture {
+function createArrowTexture(baseColor = "#00f0ff"): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 64;
   const ctx = canvas.getContext("2d");
 
   if (ctx) {
-    // Clear transparent background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle translucent neon track line
-    ctx.fillStyle = "rgba(6, 182, 212, 0.25)";
-    ctx.fillRect(0, 20, canvas.width, 24);
+    // Glowing translucent background ribbon lane
+    ctx.fillStyle = "rgba(0, 240, 255, 0.22)";
+    ctx.fillRect(0, 8, canvas.width, 48);
 
-    // Glowing Chevrons (>>>)
+    // Outer neon border rails
+    ctx.strokeStyle = "rgba(0, 240, 255, 0.65)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 8);
+    ctx.lineTo(canvas.width, 8);
+    ctx.moveTo(0, 56);
+    ctx.lineTo(canvas.width, 56);
+    ctx.stroke();
+
+    // Bold glowing directional chevrons (>>>)
     ctx.strokeStyle = baseColor;
     ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 7;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.shadowColor = baseColor;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 16;
 
-    const numArrows = 8;
+    const numArrows = 6;
     const step = canvas.width / numArrows;
 
     for (let i = 0; i < numArrows; i++) {
       const cx = i * step + step * 0.5;
       ctx.beginPath();
-      ctx.moveTo(cx - 14, 14);
-      ctx.lineTo(cx + 8, 32);
-      ctx.lineTo(cx - 14, 50);
+      ctx.moveTo(cx - 18, 14);
+      ctx.lineTo(cx + 12, 32);
+      ctx.lineTo(cx - 18, 50);
       ctx.stroke();
 
-      // Small bright center dot
+      // Sharp central accent dot
       ctx.beginPath();
-      ctx.arc(cx + 12, 32, 2.5, 0, Math.PI * 2);
+      ctx.arc(cx + 18, 32, 3.5, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -59,27 +69,24 @@ function createArrowTexture(baseColor = "#06b6d4"): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.repeat.set(6, 1);
+  texture.repeat.set(8, 1);
   return texture;
 }
 
 export function PathRibbon({
   curve,
   color = "#00f0ff",
-  width = 0.55,
-  speed = 1.4,
+  width = 0.82,
+  speed = 1.8,
   progress = 0,
   isWalking = false,
 }: PathRibbonProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const avatarRef = useRef<THREE.Group>(null);
-
-  // Generate arrow texture
   const texture = useMemo(() => createArrowTexture(color), [color]);
 
   // Generate flat ribbon geometry along the 3D curve
   const geometry = useMemo(() => {
-    const pointsCount = 120;
+    const pointsCount = 150;
     const points = curve.getPoints(pointsCount);
 
     const vertices: number[] = [];
@@ -105,9 +112,9 @@ export function PathRibbon({
       const left = p.clone().add(side.clone().multiplyScalar(-halfW));
       const right = p.clone().add(side.clone().multiplyScalar(halfW));
 
-      // Lift slightly above floor to prevent z-fighting
-      left.y = 0.085;
-      right.y = 0.085;
+      // Lift above floor to ensure crystal-clear visibility above epoxy floor
+      left.y = 0.12;
+      right.y = 0.12;
 
       vertices.push(left.x, left.y, left.z);
       vertices.push(right.x, right.y, right.z);
@@ -131,59 +138,46 @@ export function PathRibbon({
     return geo;
   }, [curve, width]);
 
-  // Animate the arrow flow along the ribbon
+  // Animate the arrow flow continuously along the ribbon
   useFrame((_, delta) => {
     if (texture) {
       texture.offset.x -= delta * speed;
-    }
-
-    // If walking animation is active, update avatar position along curve
-    if (avatarRef.current && isWalking) {
-      const currentPoint = curve.getPointAt(progress);
-      avatarRef.current.position.set(currentPoint.x, 0.45, currentPoint.z);
-
-      // Rotate avatar towards tangent
-      if (progress < 0.99) {
-        const nextPoint = curve.getPointAt(Math.min(1, progress + 0.02));
-        avatarRef.current.lookAt(nextPoint.x, 0.45, nextPoint.z);
-      }
     }
   });
 
   return (
     <group>
-      {/* 3D Ribbon Mesh */}
+      {/* 3D Directional Arrow Ribbon Mesh */}
       <mesh ref={meshRef} geometry={geometry}>
         <meshBasicMaterial
           map={texture}
           transparent
-          opacity={0.92}
+          opacity={0.94}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Start Point Pulsing Disc (Elevator Core Landmark) */}
-      <mesh position={[curve.points[0].x, 0.09, curve.points[0].z]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.3, 0.75, 32]} />
-        <meshBasicMaterial color="#38bdf8" transparent opacity={0.8} side={THREE.DoubleSide} />
+      {/* Starting Point (Elevator Foyer) Pulsing Radar Disc */}
+      <mesh
+        position={[curve.points[0].x, 0.122, curve.points[0].z]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <ringGeometry args={[0.35, 0.95, 32]} />
+        <meshBasicMaterial
+          color="#38bdf8"
+          transparent
+          opacity={0.85}
+          side={THREE.DoubleSide}
+        />
       </mesh>
 
-      {/* Walking Avatar Indicator (If active) */}
-      {isWalking && (
-        <group ref={avatarRef}>
-          {/* Avatar Body Sphere with Glow */}
-          <mesh position={[0, 0.5, 0]}>
-            <sphereGeometry args={[0.28, 16, 16]} />
-            <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.6} />
-          </mesh>
-          {/* Floor Shadow / Ring */}
-          <mesh position={[0, -0.35, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.1, 0.45, 16]} />
-            <meshBasicMaterial color="#0284c7" transparent opacity={0.5} />
-          </mesh>
-        </group>
-      )}
+      {/* Real 3D Humanoid Walker Character (ren.glb with walk & idle animations) */}
+      <HumanWalker
+        curve={curve}
+        progress={progress}
+        isWalking={isWalking}
+      />
     </group>
   );
 }

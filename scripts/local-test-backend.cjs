@@ -131,7 +131,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const parsedUrl = new URL(req.url, "");
+  const parsedUrl = new URL(req.url, "http://localhost:3000");
   const { pathname, searchParams } = parsedUrl;
 
   if (req.method === "POST" && pathname === "/api/auth/login") {

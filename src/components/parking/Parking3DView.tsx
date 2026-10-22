@@ -29,10 +29,12 @@ import {
   getIndoorLandmarks,
   IndoorLandmark,
   PathNavigationResult,
+  safeGetPointAt,
 } from "./navigation/ParkingPathfinder";
 import { PathRibbon } from "./navigation/PathRibbon";
 import { CarBeaconMarker } from "./navigation/CarBeaconMarker";
 import { IndoorNavHUD } from "./navigation/IndoorNavHUD";
+import { VietnamBasementContext } from "./navigation/VietnamBasementContext";
 
 type SlotStatus = "free" | "occupied";
 type SlotType = "normal" | "ev" | "vip" | "handicap";
@@ -2385,155 +2387,91 @@ const ParkingScene = ({
 
   return (
     <>
-      <color attach="background" args={[nightMode ? profile.backgroundNight : profile.backgroundDay]} />
-      <fog attach="fog" args={[nightMode ? profile.fogNight : profile.fogDay, nightMode ? 90 : 220, nightMode ? 230 : 420]} />
-
-      {nightMode ? (
-        <>
-          <Stars radius={120} depth={55} count={2200} factor={4} saturation={0} />
-          <ambientLight intensity={0.24} />
-        </>
-      ) : (
-        <>
-          <Sky sunPosition={[100, 35, 70]} turbidity={1.15} rayleigh={0.28} mieCoefficient={0.0025} />
-          <ambientLight intensity={0.74} />
-        </>
-      )}
-
-      <Environment preset={nightMode ? "night" : "city"} />
-      <hemisphereLight intensity={nightMode ? 0.28 : 0.52} color="#f8fafc" groundColor="#cbd5e1" />
+      {/* Dark Enclosed Basement Atmosphere */}
+      <color attach="background" args={["#0c1017"]} />
+      <fog attach="fog" args={["#0c1017", 18, 95]} />
+      <ambientLight intensity={nightMode ? 0.55 : 0.82} color="#f8fafc" />
+      <pointLight position={[0, 3.8, 0]} intensity={1.6} color="#e2e8f0" distance={65} />
       <directionalLight
-        position={[26, 40, 22]}
-        intensity={nightMode ? 0.45 : 1.45}
+        position={[0, 3.9, 0]}
+        intensity={nightMode ? 0.4 : 0.9}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-near={0.5}
-        shadow-camera-far={120}
-        shadow-camera-left={-50}
-        shadow-camera-right={50}
-        shadow-camera-top={50}
-        shadow-camera-bottom={-50}
       />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.06, 0]} receiveShadow>
-        <planeGeometry args={[220, 220]} />
-        <meshStandardMaterial color="#bcd39b" roughness={0.98} />
-      </mesh>
-
+      {/* Reflective Polished Epoxy Basement Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <planeGeometry args={[yardWidth, lotDepth + 10]} />
+        <planeGeometry args={[deckWidth + 24, lotDepth + 16]} />
         <MeshReflectorMaterial
           map={asphaltMap}
-          blur={[250, 70]}
+          blur={[300, 100]}
           resolution={512}
-          mixBlur={0.62}
-          mixStrength={nightMode ? 10 : 4}
-          roughness={0.96}
-          depthScale={0.14}
-          minDepthThreshold={0.82}
-          color={nightMode ? "#334155" : "#4b5563"}
-          metalness={0.06}
-          mirror={nightMode ? 0.03 : 0.006}
+          mixBlur={0.82}
+          mixStrength={nightMode ? 8 : 4.5}
+          roughness={0.32}
+          depthScale={0.12}
+          minDepthThreshold={0.8}
+          color={nightMode ? "#141a24" : "#1f2632"}
+          metalness={0.22}
+          mirror={0.08}
         />
       </mesh>
 
-      <mesh position={[0, 0.14, frontStreetZ]} receiveShadow>
-        <boxGeometry args={[yardWidth + 28, 0.16, 11]} />
-        <meshStandardMaterial map={asphaltMap} color={nightMode ? "#243244" : "#3f4752"} roughness={0.96} />
+      {/* Driveway Central Lane Asphalt Surface */}
+      <mesh position={[0, 0.06, laneCenterZ]} receiveShadow>
+        <boxGeometry args={[deckWidth + 12, 0.08, laneWidth]} />
+        <meshStandardMaterial map={asphaltMap} color="#1c232c" roughness={0.7} />
       </mesh>
 
-      <mesh position={[0, 0.16, frontSidewalkZ]} receiveShadow>
-        <boxGeometry args={[yardWidth + 18, 0.22, 3.8]} />
-        <meshStandardMaterial map={concreteMap} color="#dfe7ef" roughness={0.98} />
+      {/* Parking Slot Banks Base */}
+      <mesh position={[0, 0.06, topBankZ]} receiveShadow>
+        <boxGeometry args={[deckWidth + 12, 0.08, 6.8]} />
+        <meshStandardMaterial map={asphaltMap} color="#27303c" roughness={0.75} />
+      </mesh>
+      <mesh position={[0, 0.06, bottomBankZ]} receiveShadow>
+        <boxGeometry args={[deckWidth + 12, 0.08, 6.8]} />
+        <meshStandardMaterial map={asphaltMap} color="#27303c" roughness={0.75} />
       </mesh>
 
-      <mesh position={[0, 0.14, backServiceZ]} receiveShadow>
-        <boxGeometry args={[yardWidth + 16, 0.16, 6.2]} />
-        <meshStandardMaterial map={asphaltMap} color={nightMode ? "#2b3644" : "#525d68"} roughness={0.97} />
-      </mesh>
+      {/* Vietnamese Basement Architecture: Enclosed Ceiling, Red PCCC Sprinklers, HVAC Ducts, Concrete Columns B2-A01, Elevator Lobby */}
+      <VietnamBasementContext
+        width={deckWidth + 14}
+        depth={lotDepth + 8}
+        height={4.2}
+        laneWidth={laneWidth}
+        lotName={parkingLot.name}
+        columnCount={columnCount}
+        slotSpacingX={slotSpacingX}
+        topBankZ={topBankZ}
+        bottomBankZ={bottomBankZ}
+      />
 
-      <mesh position={[0, 0.12, laneCenterZ]} receiveShadow>
-        <boxGeometry args={[deckWidth + 7.8, 0.16, laneWidth]} />
-        <meshStandardMaterial map={asphaltMap} color={nightMode ? "#243244" : "#55606c"} roughness={0.96} />
-      </mesh>
+      {/* Ultrasonic PGS Indicator Lamps hanging from ceiling above every parking slot */}
+      {slots.map((slot) => {
+        const z = slot.row === 0 ? topBankZ + 3.2 : bottomBankZ - 3.2;
+        const x = slotOriginX + slot.column * slotSpacingX;
+        const pgsColor =
+          slot.status === "free"
+            ? "#22c55e"
+            : slot.type === "ev"
+            ? "#3b82f6"
+            : slot.type === "vip"
+            ? "#f59e0b"
+            : "#ef4444";
 
-      <mesh position={[0, 0.12, topBankZ]} receiveShadow>
-        <boxGeometry args={[deckWidth + 7.8, 0.16, 6.8]} />
-        <meshStandardMaterial map={asphaltMap} color={nightMode ? "#39424d" : "#707b88"} roughness={0.97} />
-      </mesh>
-      <mesh position={[0, 0.12, bottomBankZ]} receiveShadow>
-        <boxGeometry args={[deckWidth + 7.8, 0.16, 6.8]} />
-        <meshStandardMaterial map={asphaltMap} color={nightMode ? "#39424d" : "#707b88"} roughness={0.97} />
-      </mesh>
+        return (
+          <group key={`pgs-${slot.id}`} position={[x, 3.82, z]}>
+            <mesh>
+              <cylinderGeometry args={[0.07, 0.07, 0.14, 16]} />
+              <meshBasicMaterial color={pgsColor} />
+            </mesh>
+            <pointLight color={pgsColor} intensity={0.8} distance={4} />
+          </group>
+        );
+      })}
 
-      {[-deckWidth / 2 + 6.2, deckWidth / 2 - 6.2].map((x, index) => (
-        <group key={`zone-mark-${x}`}>
-          <mesh position={[x, 0.13, topBankZ]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[2.4, 5.2]} />
-            <meshBasicMaterial color={index === 0 ? "#0f172a" : "#334155"} transparent opacity={0.08} />
-          </mesh>
-          <mesh position={[x, 0.13, bottomBankZ]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[2.4, 5.2]} />
-            <meshBasicMaterial color={index === 0 ? "#0f172a" : "#334155"} transparent opacity={0.08} />
-          </mesh>
-        </group>
-      ))}
-      {[-2.1, 2.1].map((offset) => (
-        <group key={`bank-seam-${offset}`}>
-          <mesh position={[0, 0.14, topBankZ + offset]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[deckWidth + 6.4, 0.12]} />
-            <meshBasicMaterial color="#0f172a" transparent opacity={0.09} />
-          </mesh>
-          <mesh position={[0, 0.14, bottomBankZ + offset]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[deckWidth + 6.4, 0.12]} />
-            <meshBasicMaterial color="#0f172a" transparent opacity={0.09} />
-          </mesh>
-        </group>
-      ))}
-      <Text
-        position={[-deckWidth / 2 + 5.6, 0.14, topBankZ]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.9}
-        color="#f8fafc"
-        anchorX="center"
-        outlineWidth={0.02}
-        outlineColor="#0f172a"
-      >
-        A ZONE
-      </Text>
-      <Text
-        position={[-deckWidth / 2 + 5.6, 0.14, bottomBankZ]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.9}
-        color="#f8fafc"
-        anchorX="center"
-        outlineWidth={0.02}
-        outlineColor="#0f172a"
-      >
-        B ZONE
-      </Text>
-
-      {Array.from({ length: 6 }).map((_, index) => (
-        <mesh key={`dash-${index}`} position={[-deckWidth / 2 + 6 + index * ((deckWidth - 12) / 5), 0.2, laneCenterZ]} receiveShadow>
-          <boxGeometry args={[2.6, 0.02, 0.16]} />
-          <meshStandardMaterial color="#f8fafc" />
-        </mesh>
-      ))}
-
-      {[-deckWidth / 4, deckWidth / 4].map((x) => (
-        <Text key={`arrow-${x}`} position={[x, 0.24, laneCenterZ]} rotation={[-Math.PI / 2, 0, 0]} fontSize={0.95} color="#f8fafc">
-          {"->"}
-        </Text>
-      ))}
-
-      {[-3.2, -1.4, 0.4, 2.2].map((z) => (
-        <mesh key={`entry-cross-${z}`} position={[-deckWidth / 2 + 10.2, 0.18, frontSidewalkZ + z * 0.18]} receiveShadow>
-          <boxGeometry args={[2.8, 0.03, 0.32]} />
-          <meshStandardMaterial color="#f8fafc" />
-        </mesh>
-      ))}
-
+      {/* Parking Slots & Vehicles */}
       <group>
         {slots.map((slot, index) => {
           const z = slot.row === 0 ? topBankZ : bottomBankZ;
@@ -2565,53 +2503,21 @@ const ParkingScene = ({
         onSlotSelect={onSlotSelect}
       />
 
-      <UrbanParkingContext
-        width={deckWidth + 8}
-        depth={lotDepth}
-        laneWidth={laneWidth}
-        accentColor={accentColor}
-        nightMode={nightMode}
-        lotName={parkingLot.name}
-        lotSeed={lotSeed}
-      />
-
-      <PlanterIsland position={[0, 0, frontSidewalkZ + 1.9]} width={deckWidth + 8.8} />
-      <PlanterIsland position={[0, 0, backServiceZ + 2.8]} width={deckWidth + 4.2} />
-
-      {[
-        [-deckWidth / 3, 0.04, -0.8, [1.2, 0.42, 0.74], 0.32],
-        [0.4, 0.04, 0.7, [1.5, 0.56, 0.92], -0.42],
-        [deckWidth / 3 - 0.8, 0.04, 1.35, [1.1, 0.42, 0.7], 0.18],
-        [-deckWidth / 2 + 12, 0.04, frontStreetZ - 0.8, [1.4, 0.4, 0.82], 0.12],
-      ].map((mark, index) => (
-        <OilMark
-          key={`oil-mark-${index}`}
-          position={[mark[0] as number, mark[1] as number, mark[2] as number]}
-          scale={mark[3] as [number, number, number]}
-          rotation={mark[4] as number}
-        />
-      ))}
-
-      <Float speed={1.1} rotationIntensity={0.03} floatIntensity={0.1}>
-        <Html position={[0, 6.6, backServiceZ + 4.4]} center>
-          <div className="rounded-full border border-white/70 bg-white/92 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700 shadow-xl">
-            {profile.label}
-          </div>
-        </Html>
-      </Float>
-
-      {nightMode && (
-        <Sparkles
-          count={40}
-          scale={[deckWidth + 18, 10, lotDepth + 8]}
-          position={[0, 4.2, 0]}
-          size={1.5}
-          speed={0.08}
-          color="#93c5fd"
-        />
+      {/* 3D INDOOR NAVIGATION: NEON ARROW RIBBON & 3D ANIMATED HUMAN WALKER & BEACON */}
+      {isNavActive && pathResult && targetSlotPos && (
+        <group>
+          <PathRibbon
+            curve={pathResult.curve}
+            progress={walkProgress || 0}
+            isWalking={Boolean(isWalking)}
+          />
+          <CarBeaconMarker
+            position={targetSlotPos}
+            slotCode={targetSlotCode || ""}
+            isFlashing={isFlashing}
+          />
+        </group>
       )}
-
-      <ContactShadows position={[0, 0.02, 0]} opacity={0.32} scale={deckWidth + 24} blur={2.6} far={36} />
     </>
   );
 };
@@ -2748,7 +2654,7 @@ const ParkingCameraController = ({
       };
       controlsRef.current.update();
     }
-  }, [camera, controlsRef, resetToken]);
+  }, [camera, controlsRef, resetToken, preset]);
 
   return null;
 };
@@ -2874,6 +2780,16 @@ const Parking3DView = ({
     );
   }, [activeLandmark, targetSlot, targetSlotPos]);
 
+  // Smooth 360-degree camera follower tracking the 3D human walker
+  useEffect(() => {
+    if (!isNavActive || !pathResult?.curve) return;
+    const currentPoint = safeGetPointAt(pathResult.curve, walkProgress || 0);
+    if (controlsRef.current && currentPoint) {
+      controlsRef.current.target.set(currentPoint.x, 1.35, currentPoint.z);
+      controlsRef.current.update();
+    }
+  }, [isNavActive, walkProgress, pathResult]);
+
   useEffect(() => {
     if (!isWalking) return;
     let animId: number;
@@ -2899,36 +2815,54 @@ const Parking3DView = ({
   }, [isWalking, targetSlot]);
 
   const cameraPresets = useMemo(() => {
-    const columnCount = Math.ceil(slots.length / 2);
-    const arrivalPosition: [number, number, number] = [
-      clamp(-15.5 - columnCount * 0.14, -20, -15.5),
-      clamp(5.6 + columnCount * 0.03, 5.6, 7.6),
-      clamp(13.8 + columnCount * 0.16, 13.8, 18.4),
-    ];
+    let arrivalPosition: [number, number, number];
+    let arrivalTarget: [number, number, number];
+
+    if (isNavActive && activeLandmark) {
+      // 3rd-person follow cam behind the 3D human walker at the elevator foyer
+      arrivalPosition = [
+        activeLandmark.position[0] - 4.2,
+        2.05,
+        activeLandmark.position[2] + 2.2,
+      ];
+      arrivalTarget = [
+        activeLandmark.position[0] + 1.2,
+        1.35,
+        activeLandmark.position[2],
+      ];
+    } else {
+      // Driver eye-level perspective inside the enclosed Vietnamese basement looking down the main driveway lane
+      arrivalPosition = [
+        -deckWidth / 2 + 7.5,
+        2.2,
+        5.2,
+      ];
+      arrivalTarget = [0, 1.2, 0];
+    }
 
     return {
       arrival: {
         position: arrivalPosition,
-        fov: 48,
-        minDistance: 6,
-        maxDistance: 220,
-        target: [0, 0.34, 0] as [number, number, number],
-        minPolarAngle: 0.12,
-        maxPolarAngle: 2.55,
+        fov: isNavActive ? 56 : 64,
+        minDistance: 1.5,
+        maxDistance: 80,
+        target: arrivalTarget as [number, number, number],
+        minPolarAngle: 0.1,
+        maxPolarAngle: 2.2,
         maxAzimuthAngle: Math.PI * 2,
       },
       booking: {
         position: arrivalPosition,
-        fov: 48,
-        minDistance: 6,
-        maxDistance: 220,
-        target: [0, 0.34, 0] as [number, number, number],
-        minPolarAngle: 0.12,
-        maxPolarAngle: 2.55,
+        fov: 52,
+        minDistance: 2,
+        maxDistance: 80,
+        target: [0, 1.2, 0] as [number, number, number],
+        minPolarAngle: 0.1,
+        maxPolarAngle: 2.2,
         maxAzimuthAngle: Math.PI * 2,
       },
     };
-  }, [slots.length]);
+  }, [slots.length, isNavActive, activeLandmark, deckWidth]);
 
   const canvasCamera = useMemo(
     () => ({
@@ -2942,6 +2876,10 @@ const Parking3DView = ({
     setCameraMode("arrival");
     setCameraResetToken((value) => value + 1);
   }, [parkingLot.id, sceneProfile.key]);
+
+  useEffect(() => {
+    setCameraResetToken((value) => value + 1);
+  }, [isNavActive, activeLandmark]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
