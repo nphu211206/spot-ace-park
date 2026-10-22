@@ -43,7 +43,7 @@ export function HumanWalker({
           } else {
             // Clean, crisp white & light silver athletic track jacket & joggers
             mesh.material = new THREE.MeshStandardMaterial({
-              color: "#f8fafc",
+              color: "#1e3a8a",
               roughness: 0.32,
               metalness: 0.12,
             });
@@ -105,8 +105,8 @@ export function HumanWalker({
       <primitive object={scene} scale={1.05} dispose={null} />
 
       {/* Dedicated Follow Key Light: ensures character is always vividly illuminated */}
-      <pointLight position={[0, 2.4, 1.2]} intensity={4.5} color="#ffffff" distance={8} decay={0.8} />
-      <pointLight position={[0, 1.2, -1.0]} intensity={2.5} color="#f8fafc" distance={6} decay={0.8} />
+      <pointLight position={[0, 2.4, 1.2]} intensity={1.2} color="#ffffff" distance={8} decay={0.8} />
+      <pointLight position={[0, 1.2, -1.0]} intensity={0.8} color="#f8fafc" distance={6} decay={0.8} />
 
       {/* Floating Holographic Marker & HTML Name Badge above head */}
       <mesh position={[0, 2.25, 0]}>

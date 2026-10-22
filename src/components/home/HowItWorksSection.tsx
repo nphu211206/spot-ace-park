@@ -1,85 +1,65 @@
-import { Search, CheckCircle, Navigation, ShieldCheck, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Search, ShieldCheck, Navigation } from 'lucide-react';
 
-export const HowItWorksSection = () => {
-  const navigate = useNavigate();
-
+export function HowItWorksSection() {
   const steps = [
     {
-      step: "01",
-      icon: Search,
-      title: "Tìm kiếm & So sánh",
-      description:
-        "Nhập điểm đến trên ứng dụng để xem các bãi đỗ xe gần nhất. Kiểm tra trước số lượng ô trống theo thời gian thực và giá cước từng giờ.",
+      num: 'I',
+      title: 'Tuyển Chọn & Đặt Trước',
+      desc: 'Nhập điểm đến trên ứng dụng để khám phá các bãi xe gần nhất. Kiểm tra trước số lượng ô trống theo thời gian thực và giá cước từng giờ.',
+      tag: 'Chuẩn xác & Nhanh chóng',
     },
     {
-      step: "02",
-      icon: CheckCircle,
-      title: "Đặt chỗ & Nhận lộ trình",
-      description:
-        "Chọn vị trí đỗ mong muốn và thanh toán trực tuyến. Nhận mã định danh xe; khi đến cổng, camera tự động nhận diện biển số mở barie không cần lấy vé giấy.",
+      num: 'II',
+      title: 'Khởi Hành & Tiếp Đón',
+      desc: 'Chọn vị trí đỗ mong muốn và thanh toán trực tuyến. Khi đến cổng, camera tự động nhận diện biển số mở barie không cần hạ kính lấy vé giấy.',
+      tag: 'Tự động không tiếp xúc',
     },
     {
-      step: "03",
-      icon: Navigation,
-      title: "Dễ dàng tìm lại xe bằng 3D",
-      description:
-        "Lúc đi chơi xong, mở bản đồ hầm 3D trên điện thoại. Mũi tên neon và nhân vật ảo sẽ chỉ đường từng bước dẫn bạn trở lại đúng vị trí xe đã đậu.",
+      num: 'III',
+      title: 'Dẫn Lối 3D Trở Lại',
+      desc: 'Lúc đi chơi xong, mở bản đồ hầm 3D trên điện thoại. Dải lụa neon và nhân vật 3D avatar sẽ chỉ đường từng bước dẫn bạn trở lại đúng chiếc xe.',
+      tag: 'Không bao giờ lạc xe',
     },
   ];
 
   return (
-    <section className="py-20 bg-slate-900/60 text-white relative border-t border-slate-800/80">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <section className="py-24 bg-[#0a0a0e] text-white border-t border-white/5 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-3 py-1 rounded-full">
-            Đơn giản & Tiện lợi
-          </span>
-          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mt-4">
-            Quy Trình 3 Bước Dành Cho Tài Xế
+          <div className="text-xs font-semibold text-[#c9b586] tracking-[0.25em] uppercase mb-2">
+            QUY TRÌNH TINH GIẢN
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white">
+            3 Bước Thảnh Thơi Cho Mọi Chuyến Đi
           </h2>
-          <p className="text-slate-400 text-base md:text-lg mt-3">
+          <p className="text-slate-400 text-sm md:text-base mt-2 font-light">
             Xóa bỏ mọi phiền toái khi đi gửi xe tại các trung tâm thương mại và đô thị lớn.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {steps.map((item, idx) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {steps.map((step, idx) => (
             <div
               key={idx}
-              className="rounded-3xl border border-slate-800 bg-slate-950/80 p-8 relative flex flex-col justify-between shadow-xl"
+              className="p-8 rounded-3xl bg-[#121217] border border-white/10 hover:border-[#c9b586]/40 transition-all duration-300 relative group"
             >
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                    <item.icon className="w-7 h-7" />
-                  </div>
-                  <span className="font-mono text-3xl font-black text-slate-700">{item.step}</span>
-                </div>
-
-                <h3 className="text-xl font-black text-white mb-3">{item.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{item.description}</p>
+              <div className="font-serif text-4xl text-[#c9b586]/40 group-hover:text-[#c9b586] transition-colors mb-6 font-light">
+                {step.num}
               </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center gap-1.5 text-xs text-cyan-400 font-semibold">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                <span>Nhanh chóng • Không tiếp xúc</span>
+              <h3 className="text-xl sm:text-2xl font-normal text-white mb-3">
+                {step.title}
+              </h3>
+              <p className="text-slate-300 text-sm font-light leading-relaxed mb-6">
+                {step.desc}
+              </p>
+              <div className="inline-block text-[11px] font-semibold text-[#c9b586] uppercase tracking-wider">
+                ✓ {step.tag}
               </div>
             </div>
           ))}
         </div>
-
-        <div className="mt-12 text-center">
-          <Button
-            onClick={() => navigate("/parking")}
-            className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-2xl h-12 px-8 shadow-xl shadow-cyan-500/20 text-sm md:text-base group"
-          >
-            <span>Trải Nghiệm Thử Ngay Bây Giờ</span>
-            <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
       </div>
     </section>
   );
-};
+}
