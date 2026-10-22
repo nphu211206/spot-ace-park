@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { HumanWalker } from "./HumanWalker";
@@ -173,11 +173,13 @@ export function PathRibbon({
       </mesh>
 
       {/* Real 3D Humanoid Walker Character (ren.glb with walk & idle animations) */}
-      <HumanWalker
-        curve={curve}
-        progress={progress}
-        isWalking={isWalking}
-      />
+      <Suspense fallback={null}>
+        <HumanWalker
+          curve={curve}
+          progress={progress}
+          isWalking={isWalking}
+        />
+      </Suspense>
     </group>
   );
 }

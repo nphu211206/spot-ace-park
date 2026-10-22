@@ -14,6 +14,7 @@ import {
   Stars,
   Text,
   useCursor,
+  useGLTF,
   useTexture,
 } from "@react-three/drei";
 import * as THREE from "three";
@@ -132,6 +133,14 @@ const VEHICLE_OVERLAY_ASSET_MANIFEST: Record<ParkingVehicleVariant, string> = {
   pickup: "/textures/parking-shared/fleet-v2/pickup-top.svg",
   taxi: "/textures/parking-shared/fleet-v2/taxi-top.svg",
 };
+
+// Immediate background preloads to make 3D parking lot and 3D car finder open with 0ms delay
+useGLTF.preload("/models/ren.glb");
+useTexture.preload(Object.values(VEHICLE_OVERLAY_ASSET_MANIFEST));
+useTexture.preload([
+  "/textures/parking-shared/asphalt.svg",
+  "/textures/parking-shared/concrete.svg",
+]);
 
 const PARKING_SCENE_PROFILES: Record<ParkingSceneProfileKey, ParkingSceneProfile> = {
   mall_indoor: {
@@ -301,6 +310,8 @@ const getVehicleAccent = (index: number, lotSeed: number, variant: ParkingVehicl
   return VEHICLE_ACCENT_COLORS[(lotSeed + index * 7) % VEHICLE_ACCENT_COLORS.length];
 };
 
+const slotStencilCache = new Map<string, THREE.CanvasTexture>();
+
 const createSlotStencilTexture = ({
   displayCode,
   slotId,
@@ -314,9 +325,15 @@ const createSlotStencilTexture = ({
     return null;
   }
 
+  const cacheKey = `${displayCode}_${slotId}_${occupied ? "occ" : "free"}`;
+  const cached = slotStencilCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1536;
+  canvas.width = 256;
+  canvas.height = 384;
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
@@ -351,28 +368,28 @@ const createSlotStencilTexture = ({
     ctx.strokeStyle = strokePaint;
     ctx.fillStyle = mainPaint;
     ctx.shadowColor = "rgba(15,23,42,0.22)";
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
 
     ctx.fillStyle = panelPaint;
-    drawRoundedRect(92, centerY - 232, canvas.width - 184, 464, 56);
+    drawRoundedRect(23, centerY - 58, canvas.width - 46, 116, 14);
     ctx.fill();
 
-    ctx.lineWidth = 16;
-    ctx.font = "900 338px 'Arial Black', Impact, Arial, sans-serif";
-    ctx.strokeText(mainCode, canvas.width / 2, centerY - 18);
-    ctx.fillText(mainCode, canvas.width / 2, centerY - 18);
+    ctx.lineWidth = 4;
+    ctx.font = "900 84px 'Arial Black', Impact, Arial, sans-serif";
+    ctx.strokeText(mainCode, canvas.width / 2, centerY - 5);
+    ctx.fillText(mainCode, canvas.width / 2, centerY - 5);
 
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
     ctx.fillStyle = helperPaint;
-    ctx.font = "900 92px 'Arial Black', Arial, sans-serif";
-    ctx.fillText(subCode, canvas.width / 2, centerY + 132);
+    ctx.font = "900 24px 'Arial Black', Arial, sans-serif";
+    ctx.fillText(subCode, canvas.width / 2, centerY + 33);
     ctx.restore();
   };
 
-  drawRunwayMark(420, displayCode, slotId);
-  drawRunwayMark(1116, displayCode, slotId);
+  drawRunwayMark(105, displayCode, slotId);
+  drawRunwayMark(279, displayCode, slotId);
 
   const drawSideCode = (x: number, code: string) => {
     ctx.save();
@@ -381,22 +398,26 @@ const createSlotStencilTexture = ({
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 3;
     ctx.strokeStyle = strokePaint;
     ctx.fillStyle = mainPaint;
-    ctx.font = "900 162px 'Arial Black', Impact, Arial, sans-serif";
+    ctx.font = "900 42px 'Arial Black', Impact, Arial, sans-serif";
     ctx.strokeText(code, 0, 0);
     ctx.fillText(code, 0, 0);
     ctx.restore();
   };
 
-  drawSideCode(104, displayCode);
-  drawSideCode(canvas.width - 104, displayCode);
+  drawSideCode(26, displayCode);
+  drawSideCode(canvas.width - 26, displayCode);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.anisotropy = 4;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
+  slotStencilCache.set(cacheKey, texture);
   return texture;
 };
 
@@ -850,11 +871,7 @@ const ParkingSlot = ({
   );
   useCursor(hovered && slot.status === "free");
 
-  useEffect(() => {
-    return () => {
-      slotStencilTexture?.dispose?.();
-    };
-  }, [slotStencilTexture]);
+  // Stencil texture is cached in Map for instantaneous 0ms reuse
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -2406,18 +2423,11 @@ const ParkingScene = ({
       {/* High-Gloss Commercial Epoxy Basement Floor (Reflective Grey-Blue) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
         <planeGeometry args={[deckWidth + 24, lotDepth + 16]} />
-        <MeshReflectorMaterial
+        <meshStandardMaterial
           map={asphaltMap}
-          blur={[300, 100]}
-          resolution={512}
-          mixBlur={0.82}
-          mixStrength={nightMode ? 6 : 4.2}
-          roughness={0.22}
-          depthScale={0.12}
-          minDepthThreshold={0.8}
           color={nightMode ? "#2a3648" : "#4a596d"}
-          metalness={0.28}
-          mirror={0.15}
+          roughness={0.22}
+          metalness={0.25}
         />
       </mesh>
 
@@ -2484,12 +2494,28 @@ const ParkingScene = ({
           <group key={`pgs-${slot.id}`} position={[x, 3.82, z]}>
             <mesh>
               <cylinderGeometry args={[0.07, 0.07, 0.14, 16]} />
-              <meshBasicMaterial color={pgsColor} />
+              <meshStandardMaterial
+                color={pgsColor}
+                emissive={pgsColor}
+                emissiveIntensity={2.5}
+                toneMapped={false}
+              />
             </mesh>
-            <pointLight color={pgsColor} intensity={0.8} distance={4} />
           </group>
         );
       })}
+
+      {/* 5 soft corridor fill lights spaced evenly instead of 56 point lights */}
+      {[-45, -22, 0, 22, 45].map((lightX, lIdx) => (
+        <pointLight
+          key={`corridor-fill-${lIdx}`}
+          position={[lightX, 3.85, 0]}
+          intensity={1.2}
+          distance={32}
+          decay={1}
+          color="#f8fafc"
+        />
+      ))}
 
       {/* Parking Slots & Vehicles */}
       <group>
@@ -3169,7 +3195,7 @@ const Parking3DView = ({
         </Button>
       </div>
 
-      <Canvas shadows dpr={[1, 1.8]} camera={canvasCamera}>
+      <Canvas shadows dpr={[1, 1.25]} camera={canvasCamera}>
         <ParkingCameraController
           preset={cameraPresets[cameraMode]}
           controlsRef={controlsRef}

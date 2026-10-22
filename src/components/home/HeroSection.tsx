@@ -150,7 +150,7 @@ const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            Tìm & đặt chỗ đỗ xe tự động với AI. Tiết kiệm thời gian, tối ưu chi phí.
+            Hệ sinh thái bãi đỗ xe thông minh đầu tiên tại Việt Nam tích hợp Mô hình số hóa 3D Digital Twin, tìm xe trong hầm không cần GPS và thanh toán VETC tự động.
           </motion.p>
 
           {/* CTA Buttons */}
