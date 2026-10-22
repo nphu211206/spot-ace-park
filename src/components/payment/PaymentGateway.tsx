@@ -235,7 +235,7 @@ const PaymentGateway = ({
         setStep('processing');
 
         try {
-            const res = await fetch('http://localhost:3000/api/payment/confirm', {
+            const res = await fetch('/api/payment/confirm', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bookingId, method, amount })

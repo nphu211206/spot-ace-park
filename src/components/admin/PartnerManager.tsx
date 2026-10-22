@@ -14,7 +14,7 @@ const PartnerManager = () => {
 
     const fetchCodes = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/admin/codes');
+            const res = await fetch('/api/admin/codes');
             const data = await res.json();
             if (data.success) setCodes(data.codes);
         } catch (e) {
@@ -30,7 +30,7 @@ const PartnerManager = () => {
         if (!newCode) return toast.error("Vui lòng nhập mã!");
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:3000/api/admin/codes', {
+            const res = await fetch('/api/admin/codes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: newCode })
@@ -53,7 +53,7 @@ const PartnerManager = () => {
     const deleteCode = async (id: number) => {
         if (!confirm("Bạn chắc chắn muốn xóa mã này?")) return;
         try {
-            await fetch(`http://localhost:3000/api/admin/codes/${id}`, { method: 'DELETE' });
+            await fetch(`/api/admin/codes/${id}`, { method: 'DELETE' });
             toast.success("Đã xóa mã");
             fetchCodes();
         } catch (e) {

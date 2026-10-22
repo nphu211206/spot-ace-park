@@ -1,16 +1,31 @@
 import express from 'express';
 import sql from 'mssql';
 import cors from 'cors';
+import 'dotenv/config';
 
 const app = express();
 const PORT = 3000;
 
 // --- DATABASE CONFIG ---
+const requiredEnv = [
+    'DB_USER',
+    'DB_PASSWORD',
+    'DB_SERVER',
+    'DB_DATABASE'
+];
+
+for (const key of requiredEnv) {
+    if (!process.env[key]) {
+        console.error(`[ERROR] Missing environment variable: ${key}`);
+        process.exit(1);
+    }
+}
+
 const dbConfig = {
-    user: 'spot_user',
-    password: '123456',
-    server: 'DESKTOP-UKPMA8V\\SQLEXPRESS02',
-    database: 'SpotAcePark',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_DATABASE,
     options: { encrypt: false, trustServerCertificate: true }
 };
 

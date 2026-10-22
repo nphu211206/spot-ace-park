@@ -96,7 +96,7 @@ const ManagerDashboard = () => {
 
     const fetchData = async (userId: string) => {
         try {
-            const res = await fetch(`http://localhost:3000/api/manager/dashboard/${userId}`);
+            const res = await fetch(`/api/manager/dashboard/${userId}`);
             const data = await res.json();
             if (data.lot) {
                 setLotData(data);
@@ -116,7 +116,7 @@ const ManagerDashboard = () => {
         try {
             const events = ['ENTRY', 'EXIT', 'ENTRY'];
             for (const type of events) {
-                await fetch('http://localhost:3000/api/iot/event', {
+                await fetch('/api/iot/event', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

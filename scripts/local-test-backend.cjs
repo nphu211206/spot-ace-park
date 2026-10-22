@@ -131,7 +131,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const parsedUrl = new URL(req.url, "http://localhost:3000");
+  const parsedUrl = new URL(req.url, "");
   const { pathname, searchParams } = parsedUrl;
 
   if (req.method === "POST" && pathname === "/api/auth/login") {
@@ -245,5 +245,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(3000, "0.0.0.0", () => {
-  console.log("Mock backend listening at http://localhost:3000");
+  console.log("Mock backend listening at ");
 });

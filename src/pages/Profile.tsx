@@ -33,7 +33,7 @@ const Profile = () => {
     try {
       localStorage.setItem('spot_user', JSON.stringify(user));
       // Gọi API update nếu có (Chưa implement ở server.js v1, sẽ làm ở v2)
-      // await fetch('http://localhost:3000/api/profile', ...)
+      // await fetch('/api/profile', ...)
       
       window.dispatchEvent(new Event('auth-change')); // Cập nhật Header
       toast.success("Cập nhật thông tin thành công!");

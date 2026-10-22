@@ -33,7 +33,7 @@ const Bookings = () => {
       const localBookings = readLocalBookings(user.id);
 
       try {
-        const response = await fetch(`http://localhost:3000/api/bookings?userId=${user.id}`);
+        const response = await fetch(`/api/bookings?userId=${user.id}`);
         if (!response.ok) {
           throw new Error("Server Error");
         }

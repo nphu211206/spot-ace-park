@@ -67,7 +67,7 @@ const BookingPage = () => {
       return;
     }
 
-    fetch(`http://localhost:3000/api/parking-lots/${id}`)
+    fetch(`/api/parking-lots/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setParkingLot(data);
@@ -133,7 +133,7 @@ const BookingPage = () => {
     const bookingDraft = buildBookingDraft(transactionId);
 
     try {
-      const response = await fetch("http://localhost:3000/api/bookings", {
+      const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

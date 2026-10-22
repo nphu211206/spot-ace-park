@@ -56,7 +56,7 @@ const Parking = () => {
   useEffect(() => {
     const fetchParkingLots = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/parking-lots");
+        const response = await fetch("/api/parking-lots");
         if (!response.ok) {
           throw new Error("Server Error");
         }

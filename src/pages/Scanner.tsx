@@ -90,7 +90,7 @@ const Scanner = () => {
   const checkBooking = async (plate: string) => {
     toast.loading(`Phát hiện biển số: ${plate}...`);
     try {
-        const res = await fetch('http://localhost:3000/api/scan', {
+        const res = await fetch('/api/scan', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ plate })
         });
