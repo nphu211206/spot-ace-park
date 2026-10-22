@@ -89,7 +89,19 @@ const Parking = () => {
       const location = await getUserLocation();
       setUserLocation(location);
       setLocationState("ready");
-      toast.success("Đã lấy vị trí hiện tại và đang cập nhật tuyến tới bãi đã chọn.");
+      // Auto-prioritize and select nearest parking lot to user location
+      setParkingLots((prev) => {
+        if (!prev.length) return prev;
+        const sorted = [...prev].sort((a, b) => {
+          const distA = Math.hypot(a.latitude - location.lat, a.longitude - location.lng);
+          const distB = Math.hypot(b.latitude - location.lat, b.longitude - location.lng);
+          return distA - distB;
+        });
+        setFilteredLots(sorted);
+        setSelectedLot(sorted[0]);
+        return sorted;
+      });
+      toast.success("Đã định vị thành công! Đã ưu tiên bãi xe gần bạn nhất.");
     } catch (error: any) {
       const nextState = error?.code === 1 ? "denied" : "error";
       setLocationState(nextState);

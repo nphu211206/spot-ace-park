@@ -469,7 +469,7 @@ export function VietnamBasementContext({
             {bIdx === 0
               ? "← SẢNH A (THÁP ĐỒNG KHỞI) | KHU B (Ô 15 - 28) →"
               : bIdx === 1
-              ? "TẦNG HẦM B2 • VINCOM CENTER ĐỒNG KHỞI • 5 KM/H"
+              ? `TẦNG HẦM B2 • ${lotName.toUpperCase()} • 5 KM/H`
               : "← KHU SẠC XE ĐIỆN EV | SẢNH B (RẠP PHIM CGV) →"}
           </Text>
           <Text position={[0, -0.16, 0.07]} fontSize={0.16} color="#cbd5e1" anchorX="center" anchorY="middle">

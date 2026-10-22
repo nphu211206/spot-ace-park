@@ -273,19 +273,19 @@ const BookingPage = () => {
             </div>
           </CardContent>
 
-          <CardFooter className="grid grid-cols-2 gap-4 bg-slate-950 p-6 border-t border-slate-800">
+          <CardFooter className="flex flex-col sm:flex-row gap-3 bg-slate-950 p-6 border-t border-slate-800">
             <Button
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors py-2.5"
               onClick={() => navigate("/")}
             >
               Trang Chủ
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-[0_0_20px_rgba(5,150,105,0.3)] transition-all hover:scale-105"
-              onClick={() => navigate("/scanner")}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-[0_0_20px_rgba(5,150,105,0.3)] transition-all hover:scale-105 py-2.5"
+              onClick={() => navigate("/parking")}
             >
-              Mở Máy Quét
+              Về Bãi Đỗ Xe (3D)
             </Button>
           </CardFooter>
         </Card>
