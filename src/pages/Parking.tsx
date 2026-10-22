@@ -82,6 +82,24 @@ const Parking = () => {
     fetchParkingLots();
   }, []);
 
+  const setCustomLocation = (lat: number, lng: number, label: string) => {
+    const loc = { lat, lng };
+    setUserLocation(loc);
+    setLocationState("ready");
+    setParkingLots((prev) => {
+      if (!prev.length) return prev;
+      const sorted = [...prev].sort((a, b) => {
+        const distA = Math.hypot(a.latitude - loc.lat, a.longitude - loc.lng);
+        const distB = Math.hypot(b.latitude - loc.lat, b.longitude - loc.lng);
+        return distA - distB;
+      });
+      setFilteredLots(sorted);
+      setSelectedLot(sorted[0]);
+      return sorted;
+    });
+    toast.success(`Đã chọn vị trí: ${label}`);
+  };
+
   const refreshLocation = async () => {
     setLocationState("loading");
 
@@ -300,6 +318,24 @@ const Parking = () => {
                           </a>
                         </Button>
                       </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span>Vị trí thử nghiệm:</span>
+                        <button
+                          type="button"
+                          onClick={() => setCustomLocation(20.9855, 105.8285, "Định Công Thượng, Hoàng Mai")}
+                          className="rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition"
+                        >
+                          📍 Định Công Thượng (Hoàng Mai)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCustomLocation(21.0285, 105.8542, "Hồ Hoàn Kiếm")}
+                          className="rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition"
+                        >
+                          Hồ Hoàn Kiếm
+                        </button>
+                      </div>
                     </div>
 
                     {destination && (
@@ -341,12 +377,20 @@ const Parking = () => {
                           </div>
                         </div>
 
-                        <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                          {locationState === "denied" && "Bạn đã từ chối vị trí. App vẫn cho mở lộ trình chuẩn trên Google Maps."}
-                          {locationState === "error" && "Không lấy được vị trí hiện tại. Hãy thử lại để tải tuyến thật trong app."}
-                          {locationState === "ready" && "App đang dùng vị trí hiện tại để tính tuyến thật và ETA tới bãi đã chọn."}
-                          {locationState === "loading" && "Đang xin quyền định vị và đồng bộ lộ trình..."}
-                          {locationState === "idle" && "Chuẩn bị lấy vị trí hiện tại..."}
+                        <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs text-slate-500 leading-relaxed space-y-2">
+                          <div className="font-semibold text-slate-700 flex items-center gap-1.5">
+                            <Info className="h-4 w-4 text-blue-600" />
+                            Cơ chế định vị và dẫn đường thông minh:
+                          </div>
+                          <p>
+                            • <strong>Trên điện thoại:</strong> Tự động kích hoạt chip GPS vệ tinh để định vị chính xác từng mét nơi bạn đang đứng.
+                          </p>
+                          <p>
+                            • <strong>Trên máy tính:</strong> Trình duyệt không có GPS phần cứng nên định vị qua IP mạng Internet (thường trỏ về trung tâm nhà mạng như Hoàn Kiếm/trạm FedEx).
+                          </p>
+                          <p className="text-blue-600 font-medium">
+                            👉 Khi bấm <strong>"Mở Google Maps"</strong>, Google Maps sẽ tự động dùng "Vị trí của bạn" trên thiết bị để dẫn đường chuẩn xác nhất!
+                          </p>
                         </div>
                       </div>
                     )}

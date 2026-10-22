@@ -17,14 +17,18 @@ let leafletPromise: Promise<any> | null = null;
 
 const toCoordinateString = (point: LatLng) => `${point.lat},${point.lng}`;
 
-export const buildGoogleMapsDirectionsUrl = (origin: LatLng | null, destination: LatLng) => {
+export const buildGoogleMapsDirectionsUrl = (origin: LatLng | null, destination: LatLng, forceOrigin = false) => {
   const params = new URLSearchParams({
     api: "1",
     destination: toCoordinateString(destination),
     travelmode: "driving",
   });
 
-  if (origin) {
+  // Omit origin by default for external Google Maps URLs.
+  // Leaving origin empty allows Google Maps on mobile/device to dynamically
+  // use the device's true GPS satellite location ("Vị trí của bạn"),
+  // preventing inaccurate desktop/Wi-Fi ISP IP estimates from locking the route.
+  if (forceOrigin && origin) {
     params.set("origin", toCoordinateString(origin));
   }
 
@@ -58,8 +62,8 @@ export const getUserLocation = () =>
       (error) => reject(error),
       {
         enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 60000,
+        timeout: 15000,
+        maximumAge: 0,
       },
     );
   });
