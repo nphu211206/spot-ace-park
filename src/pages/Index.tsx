@@ -1,8 +1,12 @@
 import Header from "@/components/layout/Header";
 import HeroSection from "@/components/home/HeroSection";
 import { LiveTelemetryTicker } from "@/components/home/LiveTelemetryTicker";
-import { BentoGridSection } from "@/components/home/BentoGridSection";
-import FeaturesSection from "@/components/home/FeaturesSection";
+import { PopularLocationsSection } from "@/components/home/PopularLocationsSection";
+import { HowItWorksSection } from "@/components/home/HowItWorksSection";
+import { DriverBenefitsSection } from "@/components/home/DriverBenefitsSection";
+import { CarFinderSpotlight } from "@/components/home/CarFinderSpotlight";
+import { TrustPartnersSection } from "@/components/home/TrustPartnersSection";
+import { HomeFooter } from "@/components/home/Footer";
 
 const Index = () => {
   return (
@@ -10,8 +14,12 @@ const Index = () => {
       <Header />
       <LiveTelemetryTicker />
       <HeroSection />
-      <BentoGridSection />
-      <FeaturesSection />
+      <PopularLocationsSection />
+      <CarFinderSpotlight />
+      <HowItWorksSection />
+      <DriverBenefitsSection />
+      <TrustPartnersSection />
+      <HomeFooter />
     </div>
   );
 };
